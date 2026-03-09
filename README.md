@@ -1,2 +1,30 @@
 # AtmosAI
 A small 3rd year network and telecom project.
+
+## Overview
+AtmosAI is an Edge AI-powered weather station designed to predict local meteorological conditions autonomously. Instead of relying on cloud computing, this project executes neural network inference directly on the edge using an STM32 microcontroller equipped with a Neural Processing Unit (NPU).
+
+This project is developed by a team of three 3rd-year undergraduate students in Telecommunications, Networks, and Computer Science (L3 TRI).
+William ZLOJO
+Mostapha KEMACHA
+Franck GEISTLICH
+
+
+## Hardware Specifications
+* [cite_start]**Microcontroller**: NUCLEO-N657X0 (ARM Cortex-M33)[cite: 178].
+* [cite_start]**AI Acceleration**: Integrated Neural-ART NPU (600 GOPS) optimized for deep learning inference[cite: 180].
+* **Sensors**: Temperature, Humidity, Pressure, and GPS.
+
+## Software Stack
+* [cite_start]**Machine Learning**: Python, TensorFlow/Keras for offline training[cite: 226, 230].
+* [cite_start]**Edge AI Deployment**: X-CUBE-AI / STM32Cube.AI for model optimization, quantization, and C code generation[cite: 232, 282].
+* **Firmware**: C/C++ compiled via STM32CubeIDE.
+
+## Architecture
+1.  **Data Acquisition**: Reading raw environmental data from sensors via I2C and UART interfaces.
+2.  [cite_start]**Preprocessing**: Data cleaning, normalization, and time-series formatting[cite: 341, 342].
+3.  [cite_start]**Inference**: Executing the optimized predictive neural network model locally on the STM32 NPU[cite: 233, 346].
+4.  **Output**: Displaying local weather predictions, such as precipitation probability or temperature trends.
+
+## Academic Context
+[cite_start]Developed as part of the "Embedded Systems and Edge AI" module, the objective is to evaluate the sustainability, latency, and energy consumption of embedded AI compared to classical deterministic methods[cite: 2, 3, 410, 412].
