@@ -5,9 +5,9 @@ A small 3rd year network and telecom project.
 AtmosAI is an Edge AI-powered weather station designed to predict local meteorological conditions autonomously. Instead of relying on cloud computing, this project executes neural network inference directly on the edge using an STM32 microcontroller equipped with a Neural Processing Unit (NPU).
 
 ### This project is developed by a team of three 3rd-year undergraduate students in Telecommunications, Networks, and Computer Science (L3 TRI).
-* William ZLOJO
-* Mostapha KEMACHA
-* Franck GEISTLICH
+* William Z.
+* Mostapha K.
+* Franck G.
 
 
 ## Hardware Specifications
