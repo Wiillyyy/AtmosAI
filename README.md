@@ -11,7 +11,7 @@ AtmosAI is an Edge AI-powered weather station designed to predict local meteorol
 
 
 ## Hardware Specifications
-* **Microcontroller**: NUCLEO-N657X0 (ARM Cortex-M33).
+* **Microcontroller**: NUCLEO-N657X0 (ARM Cortex-M33) / NUCLEO-F446RE / Shield X-NUCLEO-IKS01A3.
 * **AI Acceleration**: Integrated Neural-ART NPU (600 GOPS) optimized for deep learning inference
 * **Sensors**: Temperature, Humidity, Pressure, and GPS.
 
