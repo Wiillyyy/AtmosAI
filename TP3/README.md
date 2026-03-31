@@ -110,13 +110,13 @@ sudo cp index.html /usr/share/caddy/atmosai/index.html
 | v2 | MLP + feature engineering (21 features) | 3 | 76% |
 | v3 | MLP + 4 classes | 4 | 68% |
 | v4 | MLP + classes séparées | 3 | 81% |
-| **ultimate** | **ResNet tabulaire + SMOTE** | **3** | **99.84%** |
+| **ultimate** | **ResNet tabulaire + SMOTE** | **3** | **99.84%** | ** non utilisé mais testé**
 
 ### Données
-- Source : **Open-Meteo** (API gratuite, pas de clé requise)
-- Stations : Aix-les-Bains, Chambéry, Annecy
+- Source : **Meteostat** (API gratuite, pas de clé requise)
+- Stations : Aix-les-Bains
 - Période : **2014–2023** (10 ans)
-- Volume : **~260 000** observations horaires
+- Volume : **~260 000** observations (samples)
 
 ### Classes
 | ID | Classe | Catégorie TP3 | Signature capteurs |
@@ -215,7 +215,7 @@ EOF
 **Headers**
 ```
 Content-Type: application/json
-X-API-Key: <ta_clé>
+X-API-Key: <atmosai_w1lly_2026>
 ```
 
 **Body**
