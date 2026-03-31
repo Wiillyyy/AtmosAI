@@ -46,3 +46,9 @@ Finally, we will select the cost function (Loss Function) based on our specific 
 * `binary_crossentropy`
 * `categorical_crossentropy`
 * `sparse_categorical_crossentropy`
+
+## 👤 Auteur
+
+William / Franck / Mostapha — L3 Réseaux & Télécoms  
+Module ETRS606 — IA Embarquée  
+Université Savoie Mont Blanc

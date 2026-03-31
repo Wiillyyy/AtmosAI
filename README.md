@@ -28,3 +28,9 @@ AtmosAI is an Edge AI-powered weather station designed to predict local meteorol
 
 ## Academic Context
 Developed as part of the "Embedded Systems and Edge AI" module, the objective is to evaluate the sustainability, latency, and energy consumption of embedded AI compared to classical deterministic methods.
+
+## 👤 Auteur
+
+William / Franck / Mostapha — L3 Réseaux & Télécoms  
+Module ETRS606 — IA Embarquée  
+Université Savoie Mont Blanc
