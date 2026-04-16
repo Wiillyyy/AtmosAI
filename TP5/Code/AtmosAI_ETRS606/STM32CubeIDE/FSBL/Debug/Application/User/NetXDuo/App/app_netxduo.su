@@ -1,0 +1,10 @@
+C:/Users/will/Documents/Cube/AtmosAI_ETRS606/FSBL/NetXDuo/App/app_netxduo.c:100:9:hts221_write	40	static
+C:/Users/will/Documents/Cube/AtmosAI_ETRS606/FSBL/NetXDuo/App/app_netxduo.c:106:9:hts221_read	40	static
+C:/Users/will/Documents/Cube/AtmosAI_ETRS606/FSBL/NetXDuo/App/app_netxduo.c:113:9:lps22hh_write	40	static
+C:/Users/will/Documents/Cube/AtmosAI_ETRS606/FSBL/NetXDuo/App/app_netxduo.c:119:9:lps22hh_read	40	static
+C:/Users/will/Documents/Cube/AtmosAI_ETRS606/FSBL/NetXDuo/App/app_netxduo.c:133:6:MX_NetXDuo_Init	64	static
+C:/Users/will/Documents/Cube/AtmosAI_ETRS606/FSBL/NetXDuo/App/app_netxduo.c:331:13:ip_address_change_notify_callback	16	static
+C:/Users/will/Documents/Cube/AtmosAI_ETRS606/FSBL/NetXDuo/App/app_netxduo.c:353:13:nx_app_thread_entry	40	static
+C:/Users/will/Documents/Cube/AtmosAI_ETRS606/FSBL/NetXDuo/App/app_netxduo.c:431:13:App_Sensor_Thread_Entry	168	static
+C:/Users/will/Documents/Cube/AtmosAI_ETRS606/FSBL/NetXDuo/App/app_netxduo.c:583:13:App_TCP_Thread_Entry	104	static
+C:/Users/will/Documents/Cube/AtmosAI_ETRS606/FSBL/NetXDuo/App/app_netxduo.c:724:13:App_Link_Thread_Entry	40	static

@@ -1,0 +1,4 @@
+../../../Drivers/STM32N6xx_HAL_Driver/Inc/stm32n6xx_ll_bus.h:2273:22:LL_APB1_GRP1_EnableClock	1
+C:/Users/will/Documents/Cube/AtmosAI_ETRS606/FSBL/Core/Src/stm32n6xx_hal_timebase_tim.c:41:19:HAL_InitTick	2
+C:/Users/will/Documents/Cube/AtmosAI_ETRS606/FSBL/Core/Src/stm32n6xx_hal_timebase_tim.c:99:6:HAL_SuspendTick	1
+C:/Users/will/Documents/Cube/AtmosAI_ETRS606/FSBL/Core/Src/stm32n6xx_hal_timebase_tim.c:111:6:HAL_ResumeTick	1

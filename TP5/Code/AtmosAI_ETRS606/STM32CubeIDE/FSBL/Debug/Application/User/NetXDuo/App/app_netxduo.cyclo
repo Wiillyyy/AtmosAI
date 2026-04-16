@@ -1,0 +1,10 @@
+C:/Users/will/Documents/Cube/AtmosAI_ETRS606/FSBL/NetXDuo/App/app_netxduo.c:100:9:hts221_write	2
+C:/Users/will/Documents/Cube/AtmosAI_ETRS606/FSBL/NetXDuo/App/app_netxduo.c:106:9:hts221_read	2
+C:/Users/will/Documents/Cube/AtmosAI_ETRS606/FSBL/NetXDuo/App/app_netxduo.c:113:9:lps22hh_write	2
+C:/Users/will/Documents/Cube/AtmosAI_ETRS606/FSBL/NetXDuo/App/app_netxduo.c:119:9:lps22hh_read	2
+C:/Users/will/Documents/Cube/AtmosAI_ETRS606/FSBL/NetXDuo/App/app_netxduo.c:133:6:MX_NetXDuo_Init	18
+C:/Users/will/Documents/Cube/AtmosAI_ETRS606/FSBL/NetXDuo/App/app_netxduo.c:331:13:ip_address_change_notify_callback	3
+C:/Users/will/Documents/Cube/AtmosAI_ETRS606/FSBL/NetXDuo/App/app_netxduo.c:353:13:nx_app_thread_entry	5
+C:/Users/will/Documents/Cube/AtmosAI_ETRS606/FSBL/NetXDuo/App/app_netxduo.c:431:13:App_Sensor_Thread_Entry	14
+C:/Users/will/Documents/Cube/AtmosAI_ETRS606/FSBL/NetXDuo/App/app_netxduo.c:583:13:App_TCP_Thread_Entry	20
+C:/Users/will/Documents/Cube/AtmosAI_ETRS606/FSBL/NetXDuo/App/app_netxduo.c:724:13:App_Link_Thread_Entry	6

@@ -1,0 +1,16 @@
+../../../Drivers/STM32N6xx_HAL_Driver/Inc/stm32n6xx_ll_bus.h:1407:22:LL_AHB4_GRP1_EnableClock	24	static
+../../../Drivers/STM32N6xx_HAL_Driver/Inc/stm32n6xx_ll_bus.h:1755:22:LL_AHB5_GRP1_EnableClock	24	static
+../../../Drivers/STM32N6xx_HAL_Driver/Inc/stm32n6xx_ll_bus.h:1891:22:LL_AHB5_GRP1_DisableClock	16	static
+../../../Drivers/STM32N6xx_HAL_Driver/Inc/stm32n6xx_ll_bus.h:2273:22:LL_APB1_GRP1_EnableClock	24	static
+../../../Drivers/STM32N6xx_HAL_Driver/Inc/stm32n6xx_ll_bus.h:2403:22:LL_APB1_GRP1_DisableClock	16	static
+../../../Drivers/STM32N6xx_HAL_Driver/Inc/stm32n6xx_ll_bus.h:2909:22:LL_APB2_GRP1_EnableClock	24	static
+../../../Drivers/STM32N6xx_HAL_Driver/Inc/stm32n6xx_ll_bus.h:2997:22:LL_APB2_GRP1_DisableClock	16	static
+C:/Users/will/Documents/Cube/AtmosAI_ETRS606/FSBL/Core/Src/stm32n6xx_hal_msp.c:62:6:HAL_MspInit	8	static
+C:/Users/will/Documents/Cube/AtmosAI_ETRS606/FSBL/Core/Src/stm32n6xx_hal_msp.c:84:6:HAL_CACHEAXI_MspInit	16	static
+C:/Users/will/Documents/Cube/AtmosAI_ETRS606/FSBL/Core/Src/stm32n6xx_hal_msp.c:107:6:HAL_CACHEAXI_MspDeInit	16	static
+C:/Users/will/Documents/Cube/AtmosAI_ETRS606/FSBL/Core/Src/stm32n6xx_hal_msp.c:129:6:HAL_ETH_MspInit	440	static
+C:/Users/will/Documents/Cube/AtmosAI_ETRS606/FSBL/Core/Src/stm32n6xx_hal_msp.c:206:6:HAL_ETH_MspDeInit	16	static
+C:/Users/will/Documents/Cube/AtmosAI_ETRS606/FSBL/Core/Src/stm32n6xx_hal_msp.c:252:6:HAL_I2C_MspInit	440	static
+C:/Users/will/Documents/Cube/AtmosAI_ETRS606/FSBL/Core/Src/stm32n6xx_hal_msp.c:307:6:HAL_I2C_MspDeInit	16	static
+C:/Users/will/Documents/Cube/AtmosAI_ETRS606/FSBL/Core/Src/stm32n6xx_hal_msp.c:338:6:HAL_UART_MspInit	440	static
+C:/Users/will/Documents/Cube/AtmosAI_ETRS606/FSBL/Core/Src/stm32n6xx_hal_msp.c:388:6:HAL_UART_MspDeInit	16	static

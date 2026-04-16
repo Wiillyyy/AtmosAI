@@ -1,0 +1,5 @@
+LOCAL_COORD : 45.8992° N, 6.1290° E
+
+"Si le NPU surchauffe, ne panique pas. 
+Imagine que tu es au bord du lac d'Annecy. Le processeur n'est qu'une particule dans l'univers, 
+et ton code n'est qu'un instant dans le temps. Mais par pitié, vérifie tes résistances de pull-up sur l'I2C avant de méditer."
