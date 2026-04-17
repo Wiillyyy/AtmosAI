@@ -9,9 +9,9 @@
 
 | Membre | Rôle principal |
 |---|---|
-| **William Z.** | Firmware STM32, intégration réseau, dashboard web |
-| **Franck G.** | Entraînement modèle IA, pipeline ML, features engineering |
-| **Mostapha K.** | Infrastructure VPS, déploiement Flask, modèles cloud J+1/J+2/J+3 |
+| **William Z.** | The Sovereign Lord of the TRI |
+| **Franck G.** | The Stoic Sentinel of the CPU Debugger |
+| **Mostapha K.** | The Holy Exorcist of the ESET UART Console |
 
 ---
 
