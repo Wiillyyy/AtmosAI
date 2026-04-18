@@ -121,7 +121,7 @@ Le projet remplace volontairement la stack ThingSpeak/MATLAB imposée par le suj
 | OS temps réel | **Azure RTOS ThreadX** |
 | Stack réseau | **NetXDuo** (middleware ST) |
 | Connectivité | Ethernet RJ45 via PHY embarqué |
-| NPU | **Présent mais non utilisé** (voir §16) |
+| NPU | **Présent mais non utilisé** (voir 16.) |
 
 ### Carte fille capteurs
 | Composant | Détail |
