@@ -267,7 +267,7 @@ Simule des données capteurs réalistes (cycle jour/nuit, variation de pression,
 
 ---
 
-## 🔌 Intégration STM32 (TP2 → TP3)
+## Intégration STM32 (TP2 → TP3)
 
 La Nucleo doit envoyer un `HTTP POST` vers `/api/data` avec le même format JSON que le simulateur. Capteurs utilisés :
 
@@ -281,7 +281,7 @@ Le modèle TFLite peut être embarqué directement via **TFLite Micro** en inclu
 
 ---
 
-## 🎓 Justification des choix
+## Justification des choix
 
 **Pourquoi VPS plutôt que ThingSpeak ?**
 Contrôle total des données, pas de limite de débit, inférence IA intégrée côté serveur, dashboard personnalisé.

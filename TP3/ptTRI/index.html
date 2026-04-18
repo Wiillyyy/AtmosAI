@@ -1,0 +1,1361 @@
+<!DOCTYPE html>
+<html lang="fr" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AtmosAI — Station Météo TRI</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=JetBrains+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+:root {
+  --cyan:   #00c8f0;
+  --cyan2:  #0090b8;
+  --amber:  #f5a623;
+  --fog:    #8ab4c8;
+  --rain:   #5b9bd5;
+  --sun:    #f5c842;
+  --green:  #3ddc84;
+  --red:    #ff5370;
+  --radius: 12px;
+  --mono:   'JetBrains Mono', monospace;
+  --sans:   'Syne', sans-serif;
+  --trans:  0.25s ease;
+}
+
+[data-theme="dark"] {
+  --bg:      #07090d;
+  --bg2:     #0e1319;
+  --bg3:     #151d26;
+  --bg4:     #1a2433;
+  --border:  #1e2d3d;
+  --border2: #243545;
+  --text:    #d0dce8;
+  --text2:   #7a99b8;
+  --text3:   #3a5570;
+  --shadow:  rgba(0,0,0,0.5);
+  --glow:    rgba(0,200,240,0.12);
+}
+
+[data-theme="light"] {
+  --bg:      #f0f4f8;
+  --bg2:     #ffffff;
+  --bg3:     #e8edf3;
+  --bg4:     #dde4ec;
+  --border:  #cdd6e0;
+  --border2: #b8c5d0;
+  --text:    #1a2533;
+  --text2:   #4a6080;
+  --text3:   #8aa0b8;
+  --shadow:  rgba(0,0,0,0.1);
+  --glow:    rgba(0,144,184,0.08);
+}
+
+*, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+html { scroll-behavior:smooth; }
+
+body {
+  background: var(--bg); color: var(--text);
+  font-family: var(--sans); min-height: 100vh;
+  transition: background var(--trans), color var(--trans);
+  overflow-x: hidden;
+}
+
+[data-theme="dark"] body::after {
+  content:''; position:fixed; inset:0;
+  background: repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,.025) 2px,rgba(0,0,0,.025) 4px);
+  pointer-events:none; z-index:0;
+}
+
+/* NAV */
+nav {
+  position:sticky; top:0; z-index:100;
+  display:flex; align-items:center; justify-content:space-between;
+  padding:0 32px; height:64px;
+  background:var(--bg2); border-bottom:1px solid var(--border);
+  backdrop-filter:blur(12px);
+  transition:background var(--trans), border-color var(--trans);
+}
+
+.nav-brand { display:flex; align-items:center; gap:12px; text-decoration:none; cursor:pointer; }
+
+.nav-logo {
+  width:34px; height:34px; border-radius:9px;
+  background:linear-gradient(135deg,var(--cyan2),var(--cyan));
+  display:flex; align-items:center; justify-content:center; font-size:17px;
+  box-shadow:0 0 16px var(--glow);
+}
+
+.nav-title { font-size:17px; font-weight:800; color:var(--text); letter-spacing:1px; }
+.nav-title span { color:var(--cyan); }
+
+.nav-links { display:flex; align-items:center; gap:4px; }
+
+.nav-link {
+  padding:7px 16px; border-radius:8px; font-size:14px; font-weight:600;
+  color:var(--text2); text-decoration:none; cursor:pointer;
+  border:none; background:none; transition:all var(--trans); font-family:var(--sans);
+}
+.nav-link:hover  { color:var(--text); background:var(--bg3); }
+.nav-link.active { color:var(--cyan); background:var(--glow); }
+
+.nav-right { display:flex; align-items:center; gap:12px; }
+
+.theme-toggle {
+  width:44px; height:24px; border-radius:12px;
+  background:var(--bg4); border:1px solid var(--border2);
+  cursor:pointer; position:relative; transition:all var(--trans);
+}
+.theme-toggle::after {
+  content:''; position:absolute; top:3px; left:3px;
+  width:16px; height:16px; border-radius:50%;
+  background:var(--cyan); transition:transform var(--trans), background var(--trans);
+  box-shadow:0 0 6px var(--glow);
+}
+[data-theme="light"] .theme-toggle::after { transform:translateX(20px); background:var(--amber); }
+.theme-icon { font-size:13px; position:absolute; top:4px; }
+.theme-icon.moon { left:5px; }
+.theme-icon.sun  { right:4px; }
+
+.nav-status {
+  display:flex; align-items:center; gap:7px;
+  font-family:var(--mono); font-size:11px; color:var(--text2);
+  padding:6px 12px; border-radius:20px;
+  border:1px solid var(--border); background:var(--bg3);
+}
+.status-dot {
+  width:7px; height:7px; border-radius:50%;
+  background:var(--green); box-shadow:0 0 6px var(--green);
+  animation:blink 2s ease-in-out infinite;
+}
+.status-dot.offline { background:var(--red); box-shadow:0 0 6px var(--red); animation:none; }
+@keyframes blink { 0%,100%{opacity:1} 50%{opacity:.3} }
+
+/* PAGES */
+.page { display:none; }
+.page.active { display:block; animation:pagein .3s ease; }
+@keyframes pagein { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
+
+.container { max-width:1400px; margin:0 auto; padding:28px 32px; }
+
+.section-title {
+  font-size:11px; font-weight:600; letter-spacing:3px;
+  text-transform:uppercase; color:var(--text3);
+  margin-bottom:16px; display:flex; align-items:center; gap:10px;
+}
+.section-title::after { content:''; flex:1; height:1px; background:var(--border); }
+
+/* CARDS */
+.card {
+  background:var(--bg2); border:1px solid var(--border);
+  border-radius:var(--radius); padding:22px 26px;
+  transition:background var(--trans), border-color var(--trans);
+  position:relative; overflow:hidden;
+}
+[data-theme="dark"] .card::before {
+  content:''; position:absolute; top:0; left:0; right:0; height:1px;
+  background:linear-gradient(90deg,transparent,rgba(0,200,240,.15),transparent);
+}
+
+/* DASHBOARD GRID */
+.dash-grid {
+  display:grid;
+  grid-template-columns:repeat(3,1fr) 300px;
+  gap:16px;
+}
+
+.metric-label {
+  font-size:10px; font-weight:600; letter-spacing:3px;
+  text-transform:uppercase; color:var(--text3); margin-bottom:12px;
+}
+.metric-value {
+  font-family:var(--mono); font-size:48px; font-weight:300;
+  line-height:1; color:var(--cyan); transition:color var(--trans);
+}
+.metric-value.amber { color:var(--amber); }
+.metric-value.green { color:var(--green); }
+.metric-unit { font-family:var(--mono); font-size:14px; color:var(--text2); margin-left:3px; }
+.metric-sub  { margin-top:10px; font-size:12px; font-family:var(--mono); color:var(--text3); }
+
+/* EXTRA METRICS ROW (précip + vent) */
+.extra-metrics {
+  display:grid; grid-template-columns:1fr 1fr; gap:16px;
+  grid-column:1/4;
+}
+.extra-card { }
+.extra-value { font-family:var(--mono); font-size:32px; font-weight:300; color:var(--fog); }
+.extra-value.wind { color:var(--green); }
+
+/* PREDICTION */
+.pred-card { grid-column:4; grid-row:1/3; display:flex; flex-direction:column; gap:12px; }
+.pred-body { flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:8px; text-align:center; }
+.pred-emoji { font-size:56px; line-height:1; animation:float 5s ease-in-out infinite; filter:drop-shadow(0 4px 16px rgba(0,200,240,.25)); }
+@keyframes float { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-10px)} }
+.pred-name { font-size:22px; font-weight:700; color:var(--text); letter-spacing:1px; text-transform:uppercase; }
+.conf-bar { width:100%; height:5px; background:var(--bg4); border-radius:3px; overflow:hidden; margin-bottom:6px; }
+.conf-fill { height:100%; background:linear-gradient(90deg,var(--cyan2),var(--cyan)); border-radius:3px; transition:width 1.2s cubic-bezier(.4,0,.2,1); box-shadow:0 0 8px var(--glow); }
+.conf-text { font-family:var(--mono); font-size:11px; color:var(--text2); }
+.pred-divider { border:none; border-top:1px solid var(--border); }
+.pred-meta { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+.pred-meta-item { text-align:center; }
+.pred-meta-val { font-family:var(--mono); font-size:18px; color:var(--cyan); font-weight:500; }
+.pred-meta-key { font-size:10px; letter-spacing:2px; text-transform:uppercase; color:var(--text3); margin-top:3px; }
+
+/* TABLE */
+.history-card { grid-column:1/4; }
+.tbl-wrap { overflow-x:auto; }
+table { width:100%; border-collapse:collapse; font-family:var(--mono); font-size:12px; }
+th { text-align:left; padding:9px 14px; font-size:10px; letter-spacing:2px; text-transform:uppercase; color:var(--text3); border-bottom:1px solid var(--border); white-space:nowrap; }
+td { padding:10px 14px; border-bottom:1px solid var(--border); color:var(--text); transition:background var(--trans); }
+tr:last-child td { border-bottom:none; }
+tr:hover td { background:var(--bg3); }
+
+.pill { display:inline-block; padding:3px 10px; border-radius:20px; font-size:11px; letter-spacing:.5px; }
+.pill-clair      { background:rgba(245,200,66,.12);  color:var(--sun);  border:1px solid rgba(245,200,66,.25); }
+.pill-pluie      { background:rgba(91,155,213,.12);  color:var(--rain); border:1px solid rgba(91,155,213,.25); }
+.pill-brouillard { background:rgba(138,180,200,.12); color:var(--fog);  border:1px solid rgba(138,180,200,.25); }
+.pill-na         { background:var(--bg3); color:var(--text3); border:1px solid var(--border); }
+
+/* FEATURES STM32 */
+.feat-card { background:var(--bg3); border:1px solid var(--border); border-radius:8px; padding:10px 12px; text-align:center; }
+.feat-val  { font-family:var(--mono); font-size:18px; font-weight:500; color:var(--cyan); }
+.feat-lbl  { font-size:9px; font-weight:600; letter-spacing:2px; text-transform:uppercase; color:var(--text3); margin-top:4px; }
+
+/* SPARKLINE */
+.spark-card { grid-column:1/4; }
+
+/* STATS */
+.stats-row { grid-column:4; }
+.stat-item { display:flex; justify-content:space-between; align-items:center; padding:10px 0; border-bottom:1px solid var(--border); }
+.stat-item:last-child { border-bottom:none; }
+.stat-k { font-family:var(--mono); font-size:10px; letter-spacing:2px; text-transform:uppercase; color:var(--text3); }
+.stat-v { font-family:var(--mono); font-size:13px; color:var(--cyan); }
+
+/* HISTORIQUE */
+.charts-grid { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+.chart-card.full { grid-column:1/3; }
+.chart-title { font-size:13px; font-weight:600; color:var(--text2); margin-bottom:18px; }
+.chart-wrap { position:relative; height:220px; }
+
+/* ABOUT */
+.about-grid { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+.about-card.full { grid-column:1/3; }
+.about-section-title { font-size:16px; font-weight:700; color:var(--text); margin-bottom:14px; }
+.about-text { font-size:14px; line-height:1.8; color:var(--text2); }
+.model-stats { display:grid; grid-template-columns:repeat(3,1fr); gap:12px; margin-top:16px; }
+.model-stat { background:var(--bg3); border-radius:10px; padding:16px; text-align:center; border:1px solid var(--border); }
+.model-stat-val { font-family:var(--mono); font-size:26px; font-weight:500; color:var(--cyan); }
+.model-stat-key { font-size:10px; letter-spacing:2px; text-transform:uppercase; color:var(--text3); margin-top:4px; }
+.class-table { width:100%; border-collapse:collapse; margin-top:12px; }
+.class-table th { font-size:10px; letter-spacing:2px; text-transform:uppercase; color:var(--text3); padding:8px 12px; border-bottom:1px solid var(--border); text-align:left; }
+.class-table td { padding:10px 12px; border-bottom:1px solid var(--border); font-size:13px; color:var(--text); }
+.class-table tr:last-child td { border-bottom:none; }
+.feat-list { display:flex; flex-wrap:wrap; gap:8px; margin-top:12px; }
+.feat-pill { padding:4px 12px; border-radius:20px; font-family:var(--mono); font-size:11px; background:var(--bg3); border:1px solid var(--border); color:var(--text2); }
+.feat-pill.highlight { background:var(--glow); border-color:var(--cyan2); color:var(--cyan); }
+.acc-row { display:flex; align-items:center; gap:12px; margin-bottom:10px; }
+.acc-label { font-family:var(--mono); font-size:12px; color:var(--text2); width:90px; }
+.acc-bar-wrap { flex:1; height:8px; background:var(--bg4); border-radius:4px; overflow:hidden; }
+.acc-bar { height:100%; border-radius:4px; transition:width 1.5s cubic-bezier(.4,0,.2,1); }
+.acc-bar.clair      { background:linear-gradient(90deg,#c8a000,var(--sun)); }
+.acc-bar.pluie      { background:linear-gradient(90deg,#2a6cb0,var(--rain)); }
+.acc-bar.brouillard { background:linear-gradient(90deg,#4a7a90,var(--fog)); }
+.acc-val { font-family:var(--mono); font-size:12px; color:var(--text2); width:36px; text-align:right; }
+
+/* REFRESH */
+.refresh-bar { text-align:center; padding:12px; font-family:var(--mono); font-size:11px; color:var(--text3); }
+#next-refresh { color:var(--cyan); }
+
+/* H+1 STM32 PAGE */
+.h1npu-hero {
+  display:flex; flex-direction:column; align-items:center; gap:24px; padding:48px 0 32px;
+}
+.h1npu-big-card {
+  background:var(--bg2); border:1px solid var(--border);
+  border-radius:20px; padding:40px 48px;
+  display:flex; flex-direction:column; align-items:center; gap:20px; text-align:center;
+  width:100%; max-width:480px; position:relative; overflow:hidden;
+}
+[data-theme="dark"] .h1npu-big-card::before {
+  content:''; position:absolute; top:0; left:0; right:0; height:1px;
+  background:linear-gradient(90deg,transparent,rgba(0,200,240,.25),transparent);
+}
+.h1npu-waiting {
+  display:flex; flex-direction:column; align-items:center; gap:16px; padding:24px 0;
+}
+.h1npu-waiting-icon { font-size:48px; animation:pulse 2s ease-in-out infinite; }
+@keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.5;transform:scale(.95)} }
+.h1npu-waiting-text { font-family:var(--mono); font-size:13px; color:var(--text3); line-height:1.8; }
+.h1npu-emoji { font-size:96px; line-height:1; animation:float 5s ease-in-out infinite; filter:drop-shadow(0 4px 20px rgba(0,200,240,.3)); }
+.h1npu-name { font-size:28px; font-weight:800; color:var(--text); letter-spacing:2px; text-transform:uppercase; }
+.h1npu-conf-bar { width:100%; height:6px; background:var(--bg4); border-radius:3px; overflow:hidden; }
+.h1npu-conf-fill { height:100%; background:linear-gradient(90deg,var(--cyan2),var(--cyan)); border-radius:3px; transition:width 1.2s cubic-bezier(.4,0,.2,1); box-shadow:0 0 10px var(--glow); }
+.h1npu-conf-text { font-family:var(--mono); font-size:13px; color:var(--text2); }
+.h1npu-scores-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:12px; width:100%; margin-top:4px; }
+.h1npu-score-item { background:var(--bg3); border-radius:10px; padding:14px 10px; border:1px solid var(--border); }
+.h1npu-score-val { font-family:var(--mono); font-size:22px; font-weight:500; color:var(--cyan); }
+.h1npu-score-key { font-size:10px; letter-spacing:1.5px; text-transform:uppercase; color:var(--text3); margin-top:4px; }
+.h1npu-meta { font-family:var(--mono); font-size:11px; color:var(--text3); }
+.h1npu-info-row { display:grid; grid-template-columns:1fr 1fr; gap:16px; width:100%; max-width:480px; }
+.h1npu-info-card { background:var(--bg2); border:1px solid var(--border); border-radius:14px; padding:18px 20px; }
+.h1npu-info-title { font-size:10px; font-weight:600; letter-spacing:2.5px; text-transform:uppercase; color:var(--text3); margin-bottom:10px; }
+.h1npu-info-line { display:flex; justify-content:space-between; align-items:center; padding:7px 0; border-bottom:1px solid var(--border); font-family:var(--mono); font-size:12px; }
+.h1npu-info-line:last-child { border-bottom:none; }
+.h1npu-info-k { color:var(--text3); font-size:10px; letter-spacing:1px; }
+.h1npu-info-v { color:var(--cyan); }
+
+/* H+1 OFFLINE */
+.h1npu-big-card.offline {
+  border-color: var(--red) !important;
+  box-shadow: 0 0 48px rgba(255,83,112,0.18), inset 0 0 40px rgba(255,83,112,0.05);
+  transition: border-color .4s, box-shadow .4s;
+}
+#h1-toast {
+  position:fixed; top:80px; left:50%;
+  transform:translateX(-50%) translateY(-24px);
+  z-index:9999; padding:14px 32px; border-radius:40px;
+  font-family:var(--sans); font-weight:800; font-size:13px; letter-spacing:2px;
+  white-space:nowrap; pointer-events:none;
+  opacity:0; transition:all .45s cubic-bezier(.4,0,.2,1);
+}
+#h1-toast.show { opacity:1; transform:translateX(-50%) translateY(0); }
+
+/* FORECAST PAGE */
+.forecast-container { max-width:1000px; margin:0 auto; }
+.forecast-daily { display:grid; grid-template-columns:repeat(3,1fr); gap:16px; margin-bottom:24px; }
+.forecast-day-card {
+  background:var(--bg2); border:1px solid var(--border);
+  border-radius:var(--radius); padding:24px 20px; text-align:center;
+  transition:background var(--trans), border-color var(--trans);
+}
+[data-theme="dark"] .forecast-day-card::before {
+  content:''; display:block; height:1px;
+  background:linear-gradient(90deg,transparent,rgba(0,200,240,.12),transparent);
+  margin:-24px -20px 20px;
+}
+.forecast-day-label { font-size:10px; font-weight:600; letter-spacing:3px; text-transform:uppercase; color:var(--text3); margin-bottom:12px; }
+.forecast-day-icon { font-size:52px; margin-bottom:10px; }
+.forecast-day-desc { font-size:13px; color:var(--text2); margin-bottom:14px; }
+.forecast-temps { display:flex; justify-content:center; gap:16px; font-family:var(--mono); }
+.forecast-temp-max { font-size:24px; font-weight:500; color:var(--sun); }
+.forecast-temp-min { font-size:24px; font-weight:300; color:var(--text3); }
+.forecast-day-meta { display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-top:14px; }
+.forecast-meta-item { background:var(--bg3); border-radius:8px; padding:8px; border:1px solid var(--border); }
+.forecast-meta-val { font-family:var(--mono); font-size:14px; color:var(--rain); }
+.forecast-meta-val.wind { color:var(--fog); }
+.forecast-meta-key { font-size:9px; letter-spacing:1.5px; text-transform:uppercase; color:var(--text3); margin-top:2px; }
+.forecast-hourly-card { background:var(--bg2); border:1px solid var(--border); border-radius:var(--radius); padding:22px 26px; }
+.forecast-hourly-title { font-size:13px; font-weight:600; color:var(--text2); margin-bottom:18px; }
+.forecast-hourly-wrap { position:relative; height:240px; }
+.forecast-loading { display:flex; align-items:center; justify-content:center; height:200px; font-family:var(--mono); font-size:12px; color:var(--text3); }
+
+/* HAMBURGER */
+.hamburger { display:none; flex-direction:column; gap:5px; cursor:pointer; padding:6px; background:none; border:none; }
+.hamburger span { display:block; width:22px; height:2px; background:var(--text); border-radius:2px; transition:all .3s; }
+.hamburger.open span:nth-child(1) { transform:translateY(7px) rotate(45deg); }
+.hamburger.open span:nth-child(2) { opacity:0; }
+.hamburger.open span:nth-child(3) { transform:translateY(-7px) rotate(-45deg); }
+
+/* RESPONSIVE */
+@media (max-width:1100px) {
+  .dash-grid { grid-template-columns:repeat(3,1fr); }
+  .pred-card { grid-column:1/4; grid-row:auto; }
+  .extra-metrics,.history-card,.spark-card,.stats-row { grid-column:1/4; }
+  .charts-grid { grid-template-columns:1fr; }
+  .chart-card.full { grid-column:1; }
+  .about-grid { grid-template-columns:1fr; }
+  .about-card.full { grid-column:1; }
+}
+@media (max-width:720px) {
+  nav { padding:0 16px; }
+  .nav-links {
+    display:none; flex-direction:column; position:fixed;
+    top:56px; left:0; right:0; z-index:999;
+    background:var(--bg2); border-bottom:1px solid var(--border);
+    padding:8px 0; gap:0;
+  }
+  .nav-links.open { display:flex; }
+  .hamburger { display:flex; }
+  .container { padding:16px; }
+  .dash-grid { grid-template-columns:1fr 1fr; }
+  .pred-card,.extra-metrics,.history-card,.spark-card,.stats-row { grid-column:1/3; }
+  .metric-value { font-size:36px; }
+  .model-stats { grid-template-columns:1fr 1fr; }
+}
+@media (max-width:700px) {
+  .nav-links .nav-link { width:100%; text-align:left; border-radius:0; padding:12px 20px; }
+}
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="nav-brand" onclick="showPage('dashboard')">
+    <div class="nav-logo" id="easter-logo" title="AtmosAI">⛰</div>
+    <span class="nav-title">Atmos<span>AI</span></span>
+  </div>
+  <button class="hamburger" id="hamburger" onclick="toggleMenu()" aria-label="Menu">
+    <span></span><span></span><span></span>
+  </button>
+  <div class="nav-links">
+    <button class="nav-link active" onclick="showPage('dashboard')" id="nav-dashboard">Dashboard</button>
+    <button class="nav-link"        onclick="showPage('h1stm32')"     id="nav-h1stm32">STM32 H+1</button>
+    <button class="nav-link"        onclick="showPage('forecast')"  id="nav-forecast">Prévision</button>
+    <button class="nav-link"        onclick="showPage('history')"   id="nav-history">Historique</button>
+    <button class="nav-link"        onclick="showPage('about')"     id="nav-about">Modèle IA</button>
+  </div>
+  <div class="nav-right">
+    <div class="nav-status">
+      <div class="status-dot" id="status-dot"></div>
+      <span id="status-text">—</span>
+    </div>
+    <button class="theme-toggle" onclick="toggleTheme()" aria-label="Thème">
+      <span class="theme-icon moon">🌙</span>
+      <span class="theme-icon sun">☀️</span>
+    </button>
+  </div>
+</nav>
+
+<!-- PAGE DASHBOARD -->
+<div class="page active" id="page-dashboard">
+<div class="container">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">
+    <div>
+      <div style="font-size:22px;font-weight:800;color:var(--text)">Station météo</div>
+      <div style="font-size:13px;color:var(--text2);margin-top:2px">Aix-les-Bains · 45.69°N 5.92°E · 250m</div>
+    </div>
+    <div id="dash-clock" style="font-family:var(--mono);font-size:13px;color:var(--text2)">--:--:--</div>
+  </div>
+
+  <div class="dash-grid">
+
+    <div class="card">
+      <div class="metric-label">Température</div>
+      <div><span class="metric-value" id="val-temp">--.-</span><span class="metric-unit">°C</span></div>
+      <div class="metric-sub" id="sub-temp">— dernière mesure</div>
+    </div>
+
+    <div class="card">
+      <div class="metric-label">Humidité</div>
+      <div><span class="metric-value amber" id="val-hum">--.-</span><span class="metric-unit">%</span></div>
+      <div class="metric-sub" id="sub-hum">— dernière mesure</div>
+    </div>
+
+    <div class="card">
+      <div class="metric-label">Pression</div>
+      <div><span class="metric-value green" id="val-pres" style="font-size:36px">---.-</span><span class="metric-unit">hPa</span></div>
+      <div class="metric-sub" id="sub-pres">— dernière mesure</div>
+    </div>
+
+    <!-- Prédiction H+1 STM32 — s'étend sur 3 lignes -->
+    <div class="card pred-card">
+      <div class="metric-label">Prédiction H+1</div>
+      <div class="pred-body">
+        <div class="pred-emoji" id="pred-emoji">🌡️</div>
+        <div class="pred-name" id="pred-name">—</div>
+        <div style="width:100%">
+          <div class="conf-bar"><div class="conf-fill" id="conf-fill" style="width:0%"></div></div>
+          <div class="conf-text" id="conf-text">Confiance : —</div>
+        </div>
+      </div>
+      <hr class="pred-divider">
+      <div class="pred-meta">
+        <div class="pred-meta-item">
+          <div class="pred-meta-val" id="pm-temp">—</div>
+          <div class="pred-meta-key">Temp. °C</div>
+        </div>
+        <div class="pred-meta-item">
+          <div class="pred-meta-val" id="pm-pres">—</div>
+          <div class="pred-meta-key">Pres. hPa</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card" style="grid-column:1/4">
+      <div class="section-title">Features STM32 — temps réel <span style="font-size:10px;color:var(--text3);font-weight:400;letter-spacing:1px;margin-left:8px">calculées identiquement à la carte</span></div>
+      <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-top:4px" id="features-grid">
+        <div class="feat-card"><div class="feat-val" id="f-dt1h">—</div><div class="feat-lbl">ΔT 1h (°C)</div></div>
+        <div class="feat-card"><div class="feat-val" id="f-dt3h">—</div><div class="feat-lbl">ΔT 3h (°C)</div></div>
+        <div class="feat-card"><div class="feat-val" id="f-dp1h">—</div><div class="feat-lbl">ΔP 1h (hPa)</div></div>
+        <div class="feat-card"><div class="feat-val" id="f-dp3h">—</div><div class="feat-lbl">ΔP 3h (hPa)</div></div>
+        <div class="feat-card"><div class="feat-val" id="f-dh1h">—</div><div class="feat-lbl">ΔH 1h (%)</div></div>
+        <div class="feat-card"><div class="feat-val" id="f-dwpt">—</div><div class="feat-lbl">T−Td (°C)</div></div>
+        <div class="feat-card"><div class="feat-val" id="f-hsin">—</div><div class="feat-lbl">hour_sin</div></div>
+        <div class="feat-card"><div class="feat-val" id="f-hcos">—</div><div class="feat-lbl">hour_cos</div></div>
+        <div class="feat-card"><div class="feat-val" id="f-msin">—</div><div class="feat-lbl">month_sin</div></div>
+        <div class="feat-card"><div class="feat-val" id="f-mcos">—</div><div class="feat-lbl">month_cos</div></div>
+      </div>
+    </div>
+
+    <div class="card history-card">
+      <div class="section-title">Mesures récentes</div>
+      <div class="tbl-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Heure</th><th>Device</th><th>Temp.</th><th>Humidité</th>
+              <th>Pression</th><th>H+1 STM32</th><th>Conf. H+1</th>
+            </tr>
+          </thead>
+          <tbody id="history-body">
+            <tr><td colspan="7" style="text-align:center;color:var(--text3);padding:24px">Chargement...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="card spark-card">
+      <div class="section-title">Mesures récentes — aperçu</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px">
+        <div>
+          <div style="font-size:10px;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:var(--cyan);margin-bottom:4px">Température</div>
+          <canvas id="sparkline-temp" style="width:100%;display:block"></canvas>
+        </div>
+        <div>
+          <div style="font-size:10px;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:var(--amber);margin-bottom:4px">Humidité</div>
+          <canvas id="sparkline-hum" style="width:100%;display:block"></canvas>
+        </div>
+        <div>
+          <div style="font-size:10px;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:var(--green);margin-bottom:4px">Pression</div>
+          <canvas id="sparkline-pres" style="width:100%;display:block"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <div class="card stats-row">
+      <div class="section-title">Statistiques</div>
+      <div class="stat-item"><span class="stat-k">Total mesures</span><span class="stat-v" id="s-total">—</span></div>
+      <div class="stat-item"><span class="stat-k">Temp. moy.</span><span class="stat-v" id="s-temp">—</span></div>
+      <div class="stat-item"><span class="stat-k">Humidité moy.</span><span class="stat-v" id="s-hum">—</span></div>
+      <div class="stat-item"><span class="stat-k">Pression moy.</span><span class="stat-v" id="s-pres">—</span></div>
+      <div class="stat-item"><span class="stat-k">Première mesure</span><span class="stat-v" id="s-first">—</span></div>
+      <div class="stat-item"><span class="stat-k">Dernière mesure</span><span class="stat-v" id="s-last">—</span></div>
+    </div>
+
+  </div>
+</div>
+<div class="refresh-bar">Actualisation dans <span id="next-refresh">15</span>s</div>
+<div style="text-align:center;padding:4px 0 16px">
+  <a id="admin-btn" href="admin.html"
+     style="opacity:0;pointer-events:none;font-family:var(--mono);font-size:10px;
+            color:var(--text3);text-decoration:none;letter-spacing:2px;
+            transition:opacity .4s ease;">
+    ···
+  </a>
+</div>
+</div>
+
+<!-- PAGE STM32 H+1 -->
+<div class="page" id="page-h1stm32">
+<div class="container">
+  <div style="margin-bottom:24px">
+    <div style="font-size:22px;font-weight:800;color:var(--text)">STM32 H+1</div>
+    <div style="font-size:13px;color:var(--text2);margin-top:2px">Prédiction Edge AI — STM32 NUCLEO-N657X0 · MLP embarqué</div>
+  </div>
+  <div class="h1npu-hero">
+
+    <div class="h1npu-big-card" id="h1stm32-card">
+      <!-- rempli par JS -->
+      <div class="h1npu-waiting">
+        <div class="h1npu-waiting-icon">📡</div>
+        <div class="h1npu-waiting-text">En attente de la carte STM32…<br>Aucune prédiction H+1 reçue</div>
+      </div>
+    </div>
+
+    <div class="h1npu-info-row">
+      <div class="h1npu-info-card">
+        <div class="h1npu-info-title">Modèle embarqué</div>
+        <div class="h1npu-info-line"><span class="h1npu-info-k">Architecture</span><span class="h1npu-info-v">MLP 13→32→32→16→3</span></div>
+        <div class="h1npu-info-line"><span class="h1npu-info-k">BatchNorm</span><span class="h1npu-info-v">Fusionné Dense0</span></div>
+        <div class="h1npu-info-line"><span class="h1npu-info-k">Accuracy</span><span class="h1npu-info-v">87.5 %</span></div>
+        <div class="h1npu-info-line"><span class="h1npu-info-k">Taille</span><span class="h1npu-info-v">~8 Ko (float32)</span></div>
+        <div class="h1npu-info-line"><span class="h1npu-info-k">Inférence</span><span class="h1npu-info-v">C pur, sans NPU</span></div>
+      </div>
+      <div class="h1npu-info-card">
+        <div class="h1npu-info-title">Features (13)</div>
+        <div class="h1npu-info-line"><span class="h1npu-info-k">Capteurs</span><span class="h1npu-info-v">temp · rhum · pres</span></div>
+        <div class="h1npu-info-line"><span class="h1npu-info-k">Deltas temp</span><span class="h1npu-info-v">Δ1h · Δ3h</span></div>
+        <div class="h1npu-info-line"><span class="h1npu-info-k">Deltas pres</span><span class="h1npu-info-v">Δ1h · Δ3h</span></div>
+        <div class="h1npu-info-line"><span class="h1npu-info-k">Delta rhum</span><span class="h1npu-info-v">Δ1h</span></div>
+        <div class="h1npu-info-line"><span class="h1npu-info-k">Temporelles</span><span class="h1npu-info-v">heure · mois (sin/cos)</span></div>
+        <div class="h1npu-info-line"><span class="h1npu-info-k">Dérivée</span><span class="h1npu-info-v">temp − dewpoint</span></div>
+      </div>
+    </div>
+
+  </div>
+</div>
+</div>
+
+<!-- PAGE PRÉVISION -->
+<div class="page" id="page-forecast">
+<div class="container">
+  <div style="margin-bottom:24px">
+    <div style="font-size:22px;font-weight:800;color:var(--text)">Prévision</div>
+    <div style="font-size:13px;color:var(--text2);margin-top:2px">Aix-les-Bains · Modèle IA VPS · J+1 / J+2 / J+3</div>
+  </div>
+  <div class="forecast-container">
+    <div class="forecast-daily" id="forecast-daily">
+      <div class="forecast-loading" style="grid-column:1/4">Chargement…</div>
+    </div>
+    <div class="forecast-hourly-card">
+      <div class="forecast-hourly-title">Probabilité par classe — J+1 / J+2 / J+3</div>
+      <div class="forecast-hourly-wrap"><canvas id="chart-forecast-hourly"></canvas></div>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- PAGE HISTORIQUE -->
+<div class="page" id="page-history">
+<div class="container">
+  <div style="margin-bottom:24px">
+    <div style="font-size:22px;font-weight:800;color:var(--text)">Historique</div>
+    <div style="font-size:13px;color:var(--text2);margin-top:2px">50 dernières mesures — survole les courbes pour voir les valeurs</div>
+  </div>
+  <div class="charts-grid">
+    <div class="card chart-card full">
+      <div class="chart-title">🌡️ Température (°C)</div>
+      <div class="chart-wrap"><canvas id="chart-temp"></canvas></div>
+    </div>
+    <div class="card chart-card">
+      <div class="chart-title">💧 Humidité (%)</div>
+      <div class="chart-wrap"><canvas id="chart-hum"></canvas></div>
+    </div>
+    <div class="card chart-card">
+      <div class="chart-title">🔵 Pression (hPa)</div>
+      <div class="chart-wrap"><canvas id="chart-pres"></canvas></div>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- PAGE MODÈLE IA -->
+<div class="page" id="page-about">
+<div class="container">
+  <div style="margin-bottom:24px">
+    <div style="font-size:22px;font-weight:800;color:var(--text)">Modèle IA</div>
+    <div style="font-size:13px;color:var(--text2);margin-top:2px">Architecture & performances — ETRS606</div>
+  </div>
+  <div class="about-grid">
+
+    <div class="card about-card full">
+      <div class="about-section-title">À propos d'AtmosAI</div>
+      <p class="about-text">AtmosAI est un système de classification météorologique embarqué développé dans le cadre du module ETRS606 (IA Embarquée) à l'Université Savoie Mont Blanc. Les données capteurs sont collectées via une carte STM32 NUCLEO-N657X0 équipée du shield X-NUCLEO-IKS01A3, transmises via HTTP POST à une API Flask hébergée sur VPS, puis classifiées en temps réel par un réseau de neurones.</p>
+      <p class="about-text" style="margin-top:10px">L'approche se démarque du sujet original (ThingSpeak) en proposant une stack complète auto-hébergée : collecte, inférence, stockage et visualisation entièrement maîtrisés.</p>
+      <div class="model-stats">
+        <div class="model-stat"><div class="model-stat-val">79.4%</div><div class="model-stat-key">Accuracy H+1</div></div>
+        <div class="model-stat"><div class="model-stat-val">13</div><div class="model-stat-key">Features</div></div>
+        <div class="model-stat"><div class="model-stat-val">2 modèles IA</div><div class="model-stat-key">STM32 + VPS</div></div>
+      </div>
+    </div>
+
+    <div class="card about-card">
+      <div class="about-section-title">Architecture MLP</div>
+      <p class="about-text">Deux modèles indépendants : H+1 embarqué sur STM32 (C float32, sans NPU) et J+1/J+2/J+3 sur VPS (Keras).</p>
+      <div style="margin-top:16px;font-family:var(--mono);font-size:12px;color:var(--text2);line-height:2.2">
+        <div style="color:var(--cyan);font-size:10px;letter-spacing:2px;text-transform:uppercase;margin-bottom:4px">H+1 STM32 — C float32</div>
+        <div style="color:var(--cyan)">Input(13) — StandardScaler</div>
+        <div>↓ Dense(32, ReLU) + BatchNorm <span style="color:var(--text3);font-size:10px">← fusionné</span></div>
+        <div>↓ Dense(32, ReLU)</div>
+        <div>↓ Dense(16, ReLU)</div>
+        <div style="color:var(--cyan)">↓ Dense(3, Softmax) — Clair/Pluie/Brouillard</div>
+        <div style="color:var(--text3);font-size:10px;margin-top:2px">~8 Ko · inférence C pure · pas de NPU · 79.4% accuracy</div>
+      </div>
+      <div style="margin-top:16px;font-family:var(--mono);font-size:12px;color:var(--text2);line-height:2.2">
+        <div style="color:var(--cyan);font-size:10px;letter-spacing:2px;text-transform:uppercase;margin-bottom:4px">J+1/J+2/J+3 VPS — Keras Sequential</div>
+        <div style="color:var(--cyan)">Input(13) — StandardScaler</div>
+        <div>↓ Dense(64, ReLU) + BatchNorm</div>
+        <div>↓ Dense(64, ReLU)</div>
+        <div>↓ Dense(32, ReLU)</div>
+        <div style="color:var(--cyan)">↓ Dense(3, Softmax) — Clair/Pluie/Neige</div>
+        <div style="color:var(--text3);font-size:10px;margin-top:2px">3 modèles indépendants · format .keras · VPS Python</div>
+      </div>
+    </div>
+
+    <div class="card about-card">
+      <div class="about-section-title">H+1 STM32 — Classes & Recall</div>
+      <p class="about-text" style="margin-bottom:16px">3 classes du modèle embarqué STM32 (capteurs temp/rhum/pres uniquement).</p>
+      <div class="acc-row">
+        <div class="acc-label">☀️ Clair</div>
+        <div class="acc-bar-wrap"><div class="acc-bar clair" style="width:0%" data-w="91"></div></div>
+        <div class="acc-val">91%</div>
+      </div>
+      <div class="acc-row">
+        <div class="acc-label">🌧️ Pluie</div>
+        <div class="acc-bar-wrap"><div class="acc-bar pluie" style="width:0%" data-w="57"></div></div>
+        <div class="acc-val">57%</div>
+      </div>
+      <div class="acc-row">
+        <div class="acc-label">🌫️ Brouillard</div>
+        <div class="acc-bar-wrap"><div class="acc-bar brouillard" style="width:0%" data-w="68"></div></div>
+        <div class="acc-val">68%</div>
+      </div>
+      <table class="class-table" style="margin-top:16px">
+        <tr><th>Classe</th><th>Signature</th></tr>
+        <tr><td>☀️ Clair</td><td>rhum↓ pres↑ temp stable</td></tr>
+        <tr><td>🌧️ Pluie</td><td>pres↓ rhum↑ temp↓</td></tr>
+        <tr><td>🌫️ Brouillard</td><td>rhum~100% pres stable temp↓</td></tr>
+      </table>
+    </div>
+
+    <div class="card about-card full">
+      <div class="about-section-title">Features (13) — modèle H+1 embarqué</div>
+      <p class="about-text" style="margin-bottom:4px">Uniquement des features calculables en temps réel depuis les capteurs embarqués (HTS221 + LPS22HH).</p>
+      <div class="feat-list">
+        <span class="feat-pill highlight">temp</span>
+        <span class="feat-pill highlight">rhum</span>
+        <span class="feat-pill highlight">pres</span>
+        <span class="feat-pill highlight">temp_delta_1h</span>
+        <span class="feat-pill highlight">temp_delta_3h</span>
+        <span class="feat-pill highlight">pres_delta_1h</span>
+        <span class="feat-pill highlight">pres_delta_3h</span>
+        <span class="feat-pill highlight">rhum_delta_1h</span>
+        <span class="feat-pill">hour_sin</span>
+        <span class="feat-pill">hour_cos</span>
+        <span class="feat-pill">month_sin</span>
+        <span class="feat-pill">month_cos</span>
+        <span class="feat-pill highlight">temp_dwpt_diff</span>
+      </div>
+    </div>
+
+    <div class="card about-card">
+      <div class="about-section-title">Données d'entraînement</div>
+      <div class="stat-item"><span class="stat-k">Source</span><span class="stat-v">Open-Meteo Archive</span></div>
+      <div class="stat-item"><span class="stat-k">Localisation</span><span class="stat-v">Aix-les-Bains</span></div>
+      <div class="stat-item"><span class="stat-k">Période</span><span class="stat-v">2019 – 2023</span></div>
+      <div class="stat-item"><span class="stat-k">Observations</span><span class="stat-v">~43 821</span></div>
+      <div class="stat-item"><span class="stat-k">Split</span><span class="stat-v">80% / 20%</span></div>
+      <div class="stat-item"><span class="stat-k">SMOTE</span><span class="stat-v">Rééquilibrage classes</span></div>
+      <div style="border-top:1px solid var(--border);margin:14px 0 10px"></div>
+      <div class="about-section-title" style="font-size:14px;margin-bottom:10px">Déploiement STM32</div>
+      <div class="stat-item"><span class="stat-k">Format</span><span class="stat-v">C float32</span></div>
+      <div class="stat-item"><span class="stat-k">Taille poids</span><span class="stat-v">~8 Ko</span></div>
+      <div class="stat-item"><span class="stat-k">Ring buffer</span><span class="stat-v">560 échantillons</span></div>
+      <div class="stat-item"><span class="stat-k">NPU</span><span class="stat-v">Non utilisé</span></div>
+    </div>
+
+    <div class="card about-card">
+      <div class="about-section-title">Modèles VPS J+1/J+2/J+3</div>
+      <p class="about-text" style="margin-bottom:12px">3 modèles Keras indépendants, entraînés directement sur le VPS. Mêmes 13 features que la carte. Classes : Clair / Pluie / Neige.</p>
+      <div class="stat-item"><span class="stat-k">J+1 (24h)</span><span class="stat-v" style="color:var(--cyan)">64.3% bal.</span></div>
+      <div class="stat-item"><span class="stat-k">J+2 (48h)</span><span class="stat-v" style="color:var(--cyan)">61.2% bal.</span></div>
+      <div class="stat-item"><span class="stat-k">J+3 (72h)</span><span class="stat-v" style="color:var(--cyan)">54.4% bal.</span></div>
+      <div class="stat-item"><span class="stat-k">Architecture</span><span class="stat-v">64→64(BN)→32→3</span></div>
+      <div class="stat-item"><span class="stat-k">Format</span><span class="stat-v">Keras .keras</span></div>
+      <div class="stat-item"><span class="stat-k">Optimiseur</span><span class="stat-v">Adam lr=1e-3</span></div>
+      <div class="stat-item"><span class="stat-k">Inférence</span><span class="stat-v">GET /api/forecast</span></div>
+    </div>
+
+    <!-- COMPARAISON EDGE vs CLOUD -->
+    <div class="card about-card full" style="margin-top:4px">
+      <div class="about-section-title">⚡ Edge AI vs ☁️ Cloud AI — Comparaison</div>
+      <div style="overflow-x:auto">
+        <table style="width:100%;border-collapse:collapse;font-family:var(--mono);font-size:13px">
+          <thead>
+            <tr style="border-bottom:1px solid var(--border)">
+              <th style="text-align:left;padding:10px 16px;font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--text3)">Critère</th>
+              <th style="text-align:center;padding:10px 16px;font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--cyan)">STM32 H+1 (Edge)</th>
+              <th style="text-align:center;padding:10px 16px;font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--amber)">VPS J+1/J+2/J+3 (Cloud)</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr style="border-bottom:1px solid var(--border)">
+              <td style="padding:10px 16px;color:var(--text3)">Horizon</td>
+              <td style="padding:10px 16px;text-align:center;color:var(--cyan)">H+1</td>
+              <td style="padding:10px 16px;text-align:center;color:var(--amber)">J+1 / J+2 / J+3</td>
+            </tr>
+            <tr style="border-bottom:1px solid var(--border)">
+              <td style="padding:10px 16px;color:var(--text3)">Architecture</td>
+              <td style="padding:10px 16px;text-align:center;color:var(--cyan)">MLP 13→32→32→16→3</td>
+              <td style="padding:10px 16px;text-align:center;color:var(--amber)">MLP 13→128→128→64→32→3</td>
+            </tr>
+            <tr style="border-bottom:1px solid var(--border)">
+              <td style="padding:10px 16px;color:var(--text3)">Accuracy</td>
+              <td style="padding:10px 16px;text-align:center;color:var(--cyan)">87.5 %</td>
+              <td style="padding:10px 16px;text-align:center;color:var(--amber)">80.9 %</td>
+            </tr>
+            <tr style="border-bottom:1px solid var(--border)">
+              <td style="padding:10px 16px;color:var(--text3)">Taille modèle</td>
+              <td style="padding:10px 16px;text-align:center;color:var(--cyan)">~8 Ko</td>
+              <td style="padding:10px 16px;text-align:center;color:var(--amber)">~120 Ko (Keras)</td>
+            </tr>
+            <tr style="border-bottom:1px solid var(--border)">
+              <td style="padding:10px 16px;color:var(--text3)">Latence inférence</td>
+              <td style="padding:10px 16px;text-align:center;color:var(--green)">< 1 ms (local)</td>
+              <td style="padding:10px 16px;text-align:center;color:var(--text2)">~50 ms (réseau)</td>
+            </tr>
+            <tr style="border-bottom:1px solid var(--border)">
+              <td style="padding:10px 16px;color:var(--text3)">Connexion requise</td>
+              <td style="padding:10px 16px;text-align:center;color:var(--green)">Non — autonome</td>
+              <td style="padding:10px 16px;text-align:center;color:var(--text2)">Oui</td>
+            </tr>
+            <tr style="border-bottom:1px solid var(--border)">
+              <td style="padding:10px 16px;color:var(--text3)">Données externes</td>
+              <td style="padding:10px 16px;text-align:center;color:var(--text2)">Non — capteurs seuls</td>
+              <td style="padding:10px 16px;text-align:center;color:var(--amber)">Oui — Open-Meteo</td>
+            </tr>
+            <tr>
+              <td style="padding:10px 16px;color:var(--text3)">Impact environnemental</td>
+              <td style="padding:10px 16px;text-align:center;color:var(--green)">Très faible (mW)</td>
+              <td style="padding:10px 16px;text-align:center;color:var(--text2)">Datacenter (W)</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </div>
+</div>
+</div>
+
+<div id="h1-toast"></div>
+
+<script>
+// Theme
+function toggleTheme() {
+  const h = document.documentElement;
+  h.setAttribute('data-theme', h.getAttribute('data-theme') === 'dark' ? 'light' : 'dark');
+  if (historyData.length) renderHistoryCharts();
+  drawSparklines(historyData);
+}
+
+// Navigation
+let h1Interval   = null;
+let wasH1Offline = false;
+
+function showPage(id) {
+  document.getElementById('hamburger').classList.remove('open');
+  document.querySelector('.nav-links').classList.remove('open');
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
+  document.getElementById('page-' + id).classList.add('active');
+  document.getElementById('nav-' + id).classList.add('active');
+  // Stop polling si on quitte la page STM32
+  if (h1Interval) { clearInterval(h1Interval); h1Interval = null; }
+  if (id === 'history')  { if (historyData.length) renderHistoryCharts(); else fetchData().then(() => renderHistoryCharts()); }
+  if (id === 'about')    setTimeout(() => document.querySelectorAll('.acc-bar[data-w]').forEach(b => b.style.width = b.getAttribute('data-w') + '%'), 100);
+  if (id === 'h1stm32')  { loadH1Stm32(); h1Interval = setInterval(loadH1Stm32, 15000); }
+  if (id === 'forecast') loadForecast();
+}
+
+function toggleMenu() {
+  const m = document.getElementById('hamburger');
+  const n = document.querySelector('.nav-links');
+  m.classList.toggle('open');
+  n.classList.toggle('open');
+}
+
+// Helpers
+const fmt    = (v, d=1) => (v != null && v !== undefined) ? Number(v).toFixed(d) : '—';
+const fmtTs  = ts => ts ? new Date(ts+'Z').toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit',second:'2-digit'}) : '—';
+const pill   = p => p ? `<span class="pill pill-${p.toLowerCase()}">${p}</span>` : `<span class="pill pill-na">N/A</span>`;
+const ICONS  = { 'Clair':'☀️', 'Pluie':'🌧️', 'Brouillard':'🌫️' };
+
+// Clock
+setInterval(() => document.getElementById('dash-clock').textContent = new Date().toLocaleTimeString('fr-FR'), 1000);
+
+// Sparkline
+function drawSparkline(vals, canvasId, hexColor) {
+  const canvas = document.getElementById(canvasId || 'sparkline-temp');
+  if (!canvas || !vals.length) return;
+  const ctx = canvas.getContext('2d');
+  const dpr = window.devicePixelRatio || 1;
+  const H = 160;
+  canvas.style.height = H + 'px';
+  canvas.width  = canvas.offsetWidth * dpr;
+  canvas.height = H * dpr;
+  ctx.scale(dpr, dpr);
+  const W = canvas.offsetWidth, p = 8;
+  ctx.clearRect(0, 0, W, H);
+  if (vals.length < 2) return;
+  const mn = Math.min(...vals) - (Math.max(...vals) - Math.min(...vals)) * 0.1 - 0.01;
+  const mx = Math.max(...vals) + (Math.max(...vals) - Math.min(...vals)) * 0.1 + 0.01;
+  const tx = i => p + i*(W-p*2)/(vals.length-1);
+  const ty = v => H - p - (v-mn)/(mx-mn)*(H-p*2);
+  const col = hexColor || '#00c8f0';
+  // parse hex → rgba for gradient
+  const r = parseInt(col.slice(1,3),16), g = parseInt(col.slice(3,5),16), b = parseInt(col.slice(5,7),16);
+  const grad = ctx.createLinearGradient(0,0,0,H);
+  grad.addColorStop(0, `rgba(${r},${g},${b},0.28)`);
+  grad.addColorStop(1, `rgba(${r},${g},${b},0)`);
+  ctx.beginPath(); ctx.moveTo(tx(0), ty(vals[0]));
+  for (let i=1;i<vals.length;i++) { const xc=(tx(i-1)+tx(i))/2; ctx.bezierCurveTo(xc,ty(vals[i-1]),xc,ty(vals[i]),tx(i),ty(vals[i])); }
+  ctx.lineTo(tx(vals.length-1),H); ctx.lineTo(tx(0),H); ctx.closePath();
+  ctx.fillStyle = grad; ctx.fill();
+  ctx.beginPath(); ctx.moveTo(tx(0),ty(vals[0]));
+  for (let i=1;i<vals.length;i++) { const xc=(tx(i-1)+tx(i))/2; ctx.bezierCurveTo(xc,ty(vals[i-1]),xc,ty(vals[i]),tx(i),ty(vals[i])); }
+  ctx.strokeStyle=col; ctx.lineWidth=2; ctx.shadowColor=col; ctx.shadowBlur=6; ctx.stroke();
+}
+
+// Features live — calcul côté JS, identique à la carte STM32
+function updateLiveFeatures(data) {
+  if (!data || data.length < 2) return;
+  // data est trié du plus récent au plus ancien
+  const latest  = data[0];
+  const nowMs   = new Date(latest.timestamp + 'Z').getTime();
+  const findAgo = ms => data.reduce((best, r) => {
+    const d = Math.abs(new Date(r.timestamp + 'Z').getTime() - (nowMs - ms));
+    return d < Math.abs(new Date(best.timestamp + 'Z').getTime() - (nowMs - ms)) ? r : best;
+  });
+  const ago1h = findAgo(3600000);
+  const ago3h = findAgo(10800000);
+  const fmtD  = v => (v >= 0 ? '+' : '') + v.toFixed(2);
+  const set   = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
+  set('f-dt1h', fmtD(latest.temperature - ago1h.temperature));
+  set('f-dt3h', fmtD(latest.temperature - ago3h.temperature));
+  set('f-dp1h', fmtD(latest.pressure    - ago1h.pressure));
+  set('f-dp3h', fmtD(latest.pressure    - ago3h.pressure));
+  set('f-dh1h', fmtD(latest.humidity    - ago1h.humidity));
+  // Point de rosée Magnus (même formule que h1_inference.c)
+  const a = 17.625, b = 243.04, rh = Math.max(latest.humidity, 0.1);
+  const alpha = Math.log(rh / 100) + (a * latest.temperature) / (b + latest.temperature);
+  const dwpt  = (b * alpha) / (a - alpha);
+  set('f-dwpt', (latest.temperature - dwpt).toFixed(2));
+  // Cycliques — heure et mois depuis le timestamp
+  const d = new Date(latest.timestamp + 'Z');
+  const h = d.getUTCHours(), mo = d.getUTCMonth() + 1;
+  set('f-hsin', Math.sin(2 * Math.PI * h  / 24).toFixed(3));
+  set('f-hcos', Math.cos(2 * Math.PI * h  / 24).toFixed(3));
+  set('f-msin', Math.sin(2 * Math.PI * mo / 12).toFixed(3));
+  set('f-mcos', Math.cos(2 * Math.PI * mo / 12).toFixed(3));
+  // Colorer les deltas selon leur signe (positif=vert, négatif=rouge)
+  ['f-dt1h','f-dt3h','f-dp1h','f-dp3h','f-dh1h'].forEach(id => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    const v = parseFloat(el.textContent);
+    el.style.color = v > 0.05 ? 'var(--green)' : v < -0.05 ? 'var(--red)' : 'var(--text2)';
+  });
+}
+
+function drawSparklines(data) {
+  const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+  drawSparkline(data.map(r=>r.temperature).filter(v=>v!=null), 'sparkline-temp', isDark ? '#00c8f0' : '#0090b8');
+  drawSparkline(data.map(r=>r.humidity).filter(v=>v!=null),    'sparkline-hum',  isDark ? '#f5a623' : '#c47d00');
+  drawSparkline(data.map(r=>r.pressure).filter(v=>v!=null),    'sparkline-pres', isDark ? '#3ddc84' : '#1fa855');
+}
+
+// Charts
+let charts = {}, historyData = [];
+
+function getC() {
+  const dark = document.documentElement.getAttribute('data-theme') === 'dark';
+  return {
+    grid: dark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.07)',
+    tick: dark ? '#3a5570' : '#8aa0b8',
+    bg:   dark ? '#0e1319' : '#ffffff',
+    text: dark ? '#d0dce8' : '#1a2533',
+  };
+}
+
+function makeChart(id, label, data, labels, color, unit) {
+  const c = getC();
+  const ctx = document.getElementById(id);
+  if (!ctx) return;
+  if (charts[id]) charts[id].destroy();
+  charts[id] = new Chart(ctx.getContext('2d'), {
+    type: 'line',
+    data: {
+      labels,
+      datasets: [{
+        label,
+        data,
+        borderColor: color,
+        backgroundColor: color + '18',
+        borderWidth: 2,
+        pointRadius: 0,
+        pointHoverRadius: 5,
+        pointHoverBackgroundColor: color,
+        pointHoverBorderColor: c.bg,
+        pointHoverBorderWidth: 2,
+        tension: 0.4,
+        fill: true,
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      interaction: { mode: 'index', intersect: false },
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          enabled: true,
+          backgroundColor: c.bg,
+          borderColor: color + '60',
+          borderWidth: 1,
+          titleColor: c.tick,
+          bodyColor: color,
+          titleFont: { family: 'JetBrains Mono', size: 10 },
+          bodyFont:  { family: 'JetBrains Mono', size: 14, weight: '500' },
+          padding: 12,
+          displayColors: false,
+          callbacks: {
+            title: items => items[0].label,
+            label: item  => `${item.formattedValue} ${unit}`,
+          }
+        }
+      },
+      scales: {
+        x: {
+          grid: { color: c.grid },
+          ticks: { color: c.tick, maxTicksLimit: 8, font: { family: 'JetBrains Mono', size: 10 } }
+        },
+        y: {
+          grid: { color: c.grid },
+          ticks: { color: c.tick, font: { family: 'JetBrains Mono', size: 10 } }
+        }
+      }
+    }
+  });
+}
+
+function renderHistoryCharts() {
+  if (!historyData.length) return;
+  const rev    = [...historyData].reverse();
+  const labels = rev.map(r => fmtTs(r.timestamp));
+  makeChart('chart-temp', 'Température', rev.map(r => r.temperature), labels, '#00c8f0', '°C');
+  makeChart('chart-hum',  'Humidité',    rev.map(r => r.humidity),    labels, '#f5a623', '%');
+  makeChart('chart-pres', 'Pression',    rev.map(r => r.pressure),    labels, '#3ddc84', 'hPa');
+}
+
+async function fetchData() {
+  try {
+    const [dr, sr] = await Promise.all([fetch('/api/data?n=200'), fetch('/api/stats')]);
+    if (!dr.ok) throw new Error();
+    const { data } = await dr.json();
+    const stats    = await sr.json();
+    historyData = data;
+
+    // Status dynamique
+    const lastTs  = data.length ? new Date(data[0].timestamp + 'Z') : null;
+    const diffMin = lastTs ? (Date.now() - lastTs) / 60000 : 999;
+    const dot     = document.getElementById('status-dot');
+    const txt     = document.getElementById('status-text');
+
+    if (diffMin < 1) {
+      dot.style.background = 'var(--green)';
+      dot.style.boxShadow  = '0 0 6px var(--green)';
+      dot.style.animation  = 'blink 2s ease-in-out infinite';
+      txt.textContent      = 'EN LIGNE';
+    } else if (diffMin < 3) {
+      dot.style.background = '#f5a623';
+      dot.style.boxShadow  = '0 0 6px #f5a623';
+      dot.style.animation  = 'none';
+      txt.textContent      = 'INACTIF';
+    } else {
+      dot.style.background = 'var(--red)';
+      dot.style.boxShadow  = '0 0 6px var(--red)';
+      dot.style.animation  = 'none';
+      txt.textContent      = 'HORS LIGNE';
+    }
+
+    if (!data.length) return;   // <-- sécurité si DB vide
+    const l = data[0];          // <-- c'est ça qui manque
+
+    // Metrics
+    document.getElementById('val-temp').textContent  = fmt(l.temperature);
+    document.getElementById('val-hum').textContent   = fmt(l.humidity);
+    document.getElementById('val-pres').textContent  = fmt(l.pressure, 1);
+    document.getElementById('sub-temp').textContent  = `— ${fmtTs(l.timestamp)}`;
+    document.getElementById('sub-hum').textContent   = `— device: ${l.device_id}`;
+    document.getElementById('sub-pres').textContent  = `— ${fmtTs(l.timestamp)}`;
+
+    // Prediction H+1 STM32
+    const pred = l.prediction_h1, conf = l.confidence_h1;
+    document.getElementById('pred-emoji').textContent = ICONS[pred] || '🌡️';
+    document.getElementById('pred-name').textContent  = pred || '—';
+    document.getElementById('conf-fill').style.width  = conf ? `${(conf*100).toFixed(0)}%` : '0%';
+    document.getElementById('conf-text').textContent  = conf ? `Confiance : ${(conf*100).toFixed(1)}%` : '—';
+    document.getElementById('pm-temp').textContent    = fmt(l.temperature);
+    document.getElementById('pm-pres').textContent    = fmt(l.pressure, 1);
+
+    // Table
+    document.getElementById('history-body').innerHTML = data.slice(0,20).map(r => `
+      <tr>
+        <td>${fmtTs(r.timestamp)}</td>
+        <td style="color:var(--text2)">${r.device_id}</td>
+        <td style="color:var(--cyan)">${fmt(r.temperature)}°C</td>
+        <td>${fmt(r.humidity)}%</td>
+        <td>${fmt(r.pressure,1)} hPa</td>
+        <td>${r.prediction_h1
+          ? `${pill(r.prediction_h1)} <span style="font-family:var(--mono);font-size:9px;color:var(--cyan2);letter-spacing:1px;vertical-align:middle;margin-left:4px;opacity:.7">STM32</span>`
+          : '<span style="color:var(--text3);font-family:var(--mono);font-size:11px">—</span>'}</td>
+        <td style="color:var(--text2)">${r.confidence_h1 ? (r.confidence_h1*100).toFixed(1)+'%' : '—'}</td>
+      </tr>`).join('');
+
+    // Sparkline
+    drawSparklines([...data].reverse());
+    updateLiveFeatures(data);
+
+    // Stats
+    document.getElementById('s-total').textContent = stats.total ?? '—';
+    document.getElementById('s-temp').textContent  = stats.avg_temp  ? fmt(stats.avg_temp)    + ' °C'  : '—';
+    document.getElementById('s-hum').textContent   = stats.avg_hum   ? fmt(stats.avg_hum)     + ' %'   : '—';
+    document.getElementById('s-pres').textContent  = stats.avg_pres  ? fmt(stats.avg_pres,1)  + ' hPa' : '—';
+    document.getElementById('s-first').textContent = fmtTs(stats.first_ts);
+    document.getElementById('s-last').textContent  = fmtTs(stats.last_ts);
+
+    if (document.getElementById('page-history').classList.contains('active')) renderHistoryCharts();
+
+  } catch(e) {
+    const dot = document.getElementById('status-dot');
+    dot.style.background = 'var(--red)';
+    dot.style.animation  = 'none';
+    document.getElementById('status-text').textContent = 'ERREUR API';
+  }
+}
+
+// ── STM32 H+1 ──────────────────────────────────────────────────────────────────
+const H1_ICONS = { 'Clair':'☀️', 'Pluie':'🌧️', 'Brouillard':'🌫️' };
+
+function setH1Offline(card, lastTsRaw) {
+  card.classList.add('offline');
+  let line = 'Aucun contact établi';
+  if (lastTsRaw) {
+    const diffSec = (Date.now() - new Date(lastTsRaw + 'Z')) / 1000;
+    const m = Math.floor(diffSec / 60), s = Math.floor(diffSec % 60);
+    line = m > 0 ? `Dernier contact : il y a ${m}m ${s < 10 ? '0'+s : s}s` : `Dernier contact : il y a ${s}s`;
+  }
+  card.innerHTML = `
+    <div style="padding:52px 16px;display:flex;flex-direction:column;align-items:center;gap:22px;text-align:center">
+      <div style="font-size:72px;filter:drop-shadow(0 0 24px rgba(255,83,112,0.75));animation:pulse 1.4s ease-in-out infinite">📡</div>
+      <div style="font-size:46px;font-weight:800;color:var(--red);letter-spacing:5px;line-height:1.1;text-shadow:0 0 40px rgba(255,83,112,0.45)">CARTE<br>HORS LIGNE</div>
+      <div style="font-family:var(--mono);font-size:12px;color:var(--text3);line-height:2.2">${line}<br><span style="opacity:.5">Envoi toutes les 20 secondes</span></div>
+    </div>`;
+}
+
+function showH1Toast(msg, bg, fg) {
+  const t = document.getElementById('h1-toast');
+  t.textContent      = msg;
+  t.style.background = bg;
+  t.style.color      = fg;
+  t.style.boxShadow  = `0 6px 40px ${bg}90`;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 3500);
+}
+
+async function loadH1Stm32() {
+  const card = document.getElementById('h1stm32-card');
+  if (!card) return;
+  try {
+    const r = await fetch('/api/data?n=1');
+    if (!r.ok) throw new Error('API ' + r.status);
+    const { data } = await r.json();
+
+    if (!data.length) { setH1Offline(card, null); wasH1Offline = true; return; }
+
+    const l       = data[0];
+    const diffSec = (Date.now() - new Date(l.timestamp + 'Z')) / 1000;
+
+    if (diffSec > 90) {
+      // ─── HORS LIGNE ───
+      setH1Offline(card, l.timestamp);
+      wasH1Offline = true;
+      return;
+    }
+
+    // ─── EN LIGNE ───
+    if (wasH1Offline) {
+      wasH1Offline = false;
+      showH1Toast('✓ CARTE EN LIGNE — Connexion rétablie', '#3ddc84', '#000');
+    }
+    card.classList.remove('offline');
+
+    if (l.prediction_h1 == null) {
+      card.innerHTML = `
+        <div class="h1npu-waiting">
+          <div class="h1npu-waiting-icon">📡</div>
+          <div class="h1npu-waiting-text">En attente de la carte STM32…<br>Aucune prédiction H+1 reçue</div>
+        </div>`;
+      return;
+    }
+
+    const pred = l.prediction_h1;
+    const conf = l.confidence_h1 || 0;
+    const ts   = fmtTs(l.timestamp);
+    card.innerHTML = `
+      <div class="h1npu-emoji">${H1_ICONS[pred] || '🌡️'}</div>
+      <div class="h1npu-name">${pred}</div>
+      <div style="width:100%">
+        <div class="h1npu-conf-bar"><div class="h1npu-conf-fill" style="width:0%" id="h1stm32-fill"></div></div>
+      </div>
+      <div class="h1npu-conf-text">Confiance : ${(conf*100).toFixed(1)} %</div>
+      <div class="h1npu-scores-grid">
+        <div class="h1npu-score-item"><div class="h1npu-score-val">☀️</div><div class="h1npu-score-key">Clair</div></div>
+        <div class="h1npu-score-item"><div class="h1npu-score-val">🌧️</div><div class="h1npu-score-key">Pluie</div></div>
+        <div class="h1npu-score-item"><div class="h1npu-score-val">🌫️</div><div class="h1npu-score-key">Brouillard</div></div>
+      </div>
+      <div class="h1npu-meta">Dernière inférence : ${ts}</div>`;
+    setTimeout(() => {
+      const fill = document.getElementById('h1stm32-fill');
+      if (fill) fill.style.width = (conf * 100).toFixed(0) + '%';
+    }, 80);
+
+  } catch(e) {
+    setH1Offline(card, null);
+    wasH1Offline = true;
+  }
+}
+
+// ── PRÉVISION Modèle IA VPS ───────────────────────────────────────────────────
+let forecastLoaded = false;
+let forecastChart  = null;
+
+const CLASS_ICON = { 'Clair':'☀️', 'Pluie':'🌧️', 'Neige':'❄️' };
+const CLASS_COLOR = { 'Clair':'#f5c542', 'Pluie':'#5b9bd5', 'Neige':'#a8d8f0' };
+const HORIZON_LABEL = { j1:'J+1 — dans 24h', j2:'J+2 — dans 48h', j3:'J+3 — dans 72h' };
+
+async function loadForecast() {
+  if (forecastLoaded) return;
+  try {
+    const res = await fetch('/api/forecast');
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const d = await res.json();
+    const fc = d.forecast;
+
+    document.getElementById('forecast-daily').innerHTML = ['j1','j2','j3'].map(k => {
+      const p = fc[k];
+      if (!p) return `<div class="forecast-day-card"><div class="forecast-day-label">${HORIZON_LABEL[k]}</div><div class="forecast-day-icon">⏳</div><div class="forecast-day-desc" style="color:var(--text3)">Modèle en chargement</div></div>`;
+      const conf = (p.confidence * 100).toFixed(1);
+      const icon = CLASS_ICON[p.label]  || '🌡️';
+      const scoresPluie = ((p.scores.Pluie || 0) * 100).toFixed(0);
+      const scoresNeige = ((p.scores.Neige || 0) * 100).toFixed(0);
+      return `
+        <div class="forecast-day-card">
+          <div class="forecast-day-label">${HORIZON_LABEL[k]}</div>
+          <div class="forecast-day-icon">${icon}</div>
+          <div class="forecast-day-desc" style="font-size:15px;font-weight:700;color:var(--text)">${p.label}</div>
+          <div class="forecast-temps">
+            <div class="forecast-temp-max" style="color:${CLASS_COLOR[p.label]}">${conf}%</div>
+          </div>
+          <div class="forecast-day-meta">
+            <div class="forecast-meta-item">
+              <div class="forecast-meta-val" style="color:#5b9bd5">${scoresPluie}%</div>
+              <div class="forecast-meta-key">Pluie</div>
+            </div>
+            <div class="forecast-meta-item">
+              <div class="forecast-meta-val" style="color:#a8d8f0">${scoresNeige}%</div>
+              <div class="forecast-meta-key">Neige</div>
+            </div>
+          </div>
+        </div>`;
+    }).join('');
+
+    // ── Graphique — scores des 3 classes par horizon ──
+    const c   = getC();
+    const ctx = document.getElementById('chart-forecast-hourly');
+    if (forecastChart) forecastChart.destroy();
+    forecastChart = new Chart(ctx.getContext('2d'), {
+      type: 'bar',
+      data: {
+        labels: ['J+1', 'J+2', 'J+3'],
+        datasets: [
+          {
+            label: 'Clair',
+            data: ['j1','j2','j3'].map(k => fc[k] ? +(fc[k].scores.Clair * 100).toFixed(1) : 0),
+            backgroundColor: 'rgba(245,197,66,0.7)',
+            borderColor: '#f5c542',
+            borderWidth: 1, borderRadius: 4,
+          },
+          {
+            label: 'Pluie',
+            data: ['j1','j2','j3'].map(k => fc[k] ? +(fc[k].scores.Pluie * 100).toFixed(1) : 0),
+            backgroundColor: 'rgba(91,155,213,0.7)',
+            borderColor: '#5b9bd5',
+            borderWidth: 1, borderRadius: 4,
+          },
+          {
+            label: 'Neige',
+            data: ['j1','j2','j3'].map(k => fc[k] ? +((fc[k].scores.Neige || 0) * 100).toFixed(1) : 0),
+            backgroundColor: 'rgba(168,216,240,0.6)',
+            borderColor: '#a8d8f0',
+            borderWidth: 1, borderRadius: 4,
+          },
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        interaction: { mode:'index', intersect:false },
+        plugins: {
+          legend: { display:true, labels:{ color:c.tick, font:{ family:'JetBrains Mono', size:11 } } },
+          tooltip: {
+            backgroundColor: c.bg, borderColor:'rgba(0,200,240,0.3)', borderWidth:1,
+            titleColor: c.tick, bodyColor: c.text,
+            titleFont:{ family:'JetBrains Mono', size:10 },
+            bodyFont: { family:'JetBrains Mono', size:12 },
+            callbacks: { label: ctx => `${ctx.dataset.label}: ${ctx.parsed.y}%` },
+            padding: 10,
+          }
+        },
+        scales: {
+          x: { stacked:true, grid:{ color:c.grid }, ticks:{ color:c.tick, font:{ family:'JetBrains Mono', size:11 } } },
+          y: { stacked:true, min:0, max:100, grid:{ color:c.grid }, ticks:{ color:c.tick, font:{ family:'JetBrains Mono', size:10 }, callback: v => v+'%' } }
+        }
+      }
+    });
+
+    forecastLoaded = true;
+  } catch(e) {
+    document.getElementById('forecast-daily').innerHTML =
+      `<div class="forecast-loading" style="grid-column:1/4;color:var(--red)">Erreur — modèles VPS non chargés (${e.message})</div>`;
+  }
+}
+
+// Countdown
+let cd = 15;
+setInterval(() => {
+  document.getElementById('next-refresh').textContent = --cd;
+  if (cd <= 0) { cd = 15; fetchData(); }
+}, 1000);
+
+// ── EASTER EGG ───────────────────────────────────────────────────────────────
+let eggClicks = 0;
+let eggTimer = null;
+const eggLogo = document.getElementById('easter-logo');
+
+eggLogo.addEventListener('click', function(e) {
+  e.stopPropagation();
+  eggClicks++;
+  clearTimeout(eggTimer);
+  eggTimer = setTimeout(() => { eggClicks = 0; }, 3000);
+
+  if (eggClicks === 3) {
+    eggLogo.style.transform = 'rotate(20deg) scale(1.2)';
+    setTimeout(() => eggLogo.style.transform = '', 400);
+  }
+
+  if (eggClicks === 5) {
+    eggLogo.textContent = '🛠️';
+    setTimeout(() => eggLogo.textContent = '⛰', 1500);
+    showToast('Mode développeur activé 🛠️');
+    // Rendre le bouton admin visible
+    document.getElementById('admin-btn').style.opacity = '1';
+    document.getElementById('admin-btn').style.pointerEvents = 'auto';
+  }
+
+  if (eggClicks >= 8) {
+    eggClicks = 0;
+    window.open('https://www.youtube.com/watch?v=dQw4w9WgXcQ', '_blank');
+  }
+});
+
+function showToast(msg) {
+  const t = document.createElement('div');
+  t.textContent = msg;
+  t.style.cssText = `
+    position:fixed; bottom:24px; left:50%; transform:translateX(-50%);
+    background:var(--bg4); border:1px solid var(--cyan2); color:var(--cyan);
+    font-family:var(--mono); font-size:12px; padding:10px 20px;
+    border-radius:20px; z-index:9999; box-shadow:0 4px 20px var(--shadow);
+    animation: toastin .3s ease;
+  `;
+  const style = document.createElement('style');
+  style.textContent = '@keyframes toastin { from{opacity:0;transform:translateX(-50%) translateY(10px)} to{opacity:1;transform:translateX(-50%) translateY(0)} }';
+  document.head.appendChild(style);
+  document.body.appendChild(t);
+  setTimeout(() => t.remove(), 2500);
+}
+
+fetchData();
+</script>
+</body>
+</html>

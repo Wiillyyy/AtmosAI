@@ -7,7 +7,7 @@
 
 ## Équipe
 
-| Membre | Rôle principal |
+| Membre | Surnom dans l'équipe |
 |---|---|
 | **William Z.** | The Sovereign Lord of the TRI |
 | **Franck G.** | The Stoic Sentinel of the CPU Debugger |
@@ -946,4 +946,4 @@ Allocation **statique** de 4096 octets pour le stack du thread capteur, au lieu 
 
 ---
 
-*README généré pour la session ETRS606 — Université Savoie Mont Blanc — Avril 2026*
+*README généré par William (el famoso Sovereign Lord of the TRI)*
