@@ -1,7 +1,7 @@
 # AtmosAI — Station Météo Embarquée avec IA Edge & Cloud
 
 > **Module ETRS606 — IA Embarquée · Université Savoie Mont Blanc**  
-> Développé dans le cadre des TP3, TP4 et TP5 du module ETS606_SPI
+> Développé dans le cadre du module ETS606_SPI
 
 ---
 
