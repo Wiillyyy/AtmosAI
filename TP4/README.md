@@ -29,7 +29,7 @@ Taille       : ~8 Ko (poids C float32)
 
 Le modèle `.keras` a été importé dans STM32CubeMX via le pack **X-CUBE-AI**, qui génère automatiquement le code C (`h1.c`, `h1_weights.h`).
 
-On utilise `h1_infer()` — notre implémentation C float32 qui effectue le forward pass complet :
+On utilise `h1_infer()` notre implémentation C float32 qui effectue le forward pass complet :
 
 ```c
 h1_push(g_temperature, g_humidity, g_pressure);  // mise à jour ring buffer
@@ -79,7 +79,7 @@ En TP3 le JSON ne contenait que les mesures brutes. En TP4 il inclut la prédict
 
 La carte STM32N657X0 dispose d'un NPU intégré. On a d'abord tenté de l'utiliser via le runtime **LL_ATON** généré par X-CUBE-AI.
 
-Au premier appel, **BusFault** — crash immédiat. Analyse du registre CFSR :
+Au premier appel, **BusFault** crash immédiat. Analyse du registre CFSR :
 
 ```
 Adresse fautive : 0x342e0000  →  AXISRAM5 (npuRAM5)
@@ -87,7 +87,7 @@ Cause           : zone mémoire câblée exclusivement sur le bus AXI du NPU
                   le CPU (D-bus) n'a aucun chemin d'accès vers cette zone
 ```
 
-De plus, X-CUBE-AI avait compilé tous les blocs en `EpochBlock_Flags_pure_sw` — le NPU matériel n'était de toute façon pas sollicité pour un modèle aussi petit (~8 Ko).
+De plus, X-CUBE-AI avait compilé tous les blocs en `EpochBlock_Flags_pure_sw` le NPU matériel n'était de toute façon pas sollicité pour un modèle aussi petit (~8 Ko).
 
 **Solution :** `h1_infer()`, implémentation C float32 pure, mêmes poids, même résultat, sans aucune dépendance mémoire problématique.
 
@@ -95,7 +95,7 @@ De plus, X-CUBE-AI avait compilé tous les blocs en `EpochBlock_Flags_pure_sw` �
 
 ## Mesure de performance (DWT)
 
-On mesure la durée d'inférence via le **compteur DWT** (Data Watchpoint and Trace) du Cortex-M55 — précis à la nanoseconde :
+On mesure la durée d'inférence via le **compteur DWT** (Data Watchpoint and Trace) du Cortex-M55 précis à la nanoseconde :
 
 ```
 [H1] Prediction : Clair  (conf=92.3%)  inference=0.18 us

@@ -1,4 +1,4 @@
-# NPU — The Attempt
+# NPU , The Attempt
 
 > This folder contains the version of AtmosAI where we tried to use the hardware NPU on the STM32N657X0.  
 > It crashes. Here's exactly why, and what we learned from it.
@@ -7,7 +7,7 @@
 
 ## What we tried
 
-The STM32N657X0 has an integrated **NPU (Neural Processing Unit)** designed to accelerate neural network inference. The natural workflow to use it is **X-CUBE-AI** — ST's tool that takes a Keras model, converts it to optimised C code, and generates a runtime called **LL_ATON** that handles the execution.
+The STM32N657X0 has an integrated **NPU (Neural Processing Unit)** designed to accelerate neural network inference. The natural workflow to use it is **X-CUBE-AI** , ST's tool that takes a Keras model, converts it to optimised C code, and generates a runtime called **LL_ATON** that handles the execution.
 
 We imported our trained MLP (`meteo_h1_model.keras`) into STM32CubeMX via X-CUBE-AI. It generated `h1.c`, the weights, and the full LL_ATON runtime. We wired everything up in `app_netxduo.c` :
 
@@ -46,7 +46,7 @@ The crash happens inside the first `memcpy` of the LL_ATON runtime, trying to wr
 
 ---
 
-## Root cause — Memory map analysis
+## Root cause , Memory map analysis
 
 ```
 STM32N657X0 memory map :
@@ -59,13 +59,13 @@ STM32N657X0 memory map :
                  └─────────────────────────────────────┘
 ```
 
-The LL_ATON runtime places the input and output buffers directly in AXISRAM5 because that's where the NPU can read and write at full speed. The CPU is **physically unable** to access this memory region — it's not a permissions issue, it's a hardware wiring constraint.
+The LL_ATON runtime places the input and output buffers directly in AXISRAM5 because that's where the NPU can read and write at full speed. The CPU is **physically unable** to access this memory region , it's not a permissions issue, it's a hardware wiring constraint.
 
 When the runtime asks the CPU to `memcpy` the sensor data into that buffer, the CPU tries to access `0x342E0000` on its D-bus, finds no slave responding, and the bus signals a fault. ThreadX catches it as a HardFault.
 
 ---
 
-## Second problem — pure_sw blocks
+## Second problem , pure_sw blocks
 
 Even setting aside the memory issue, we inspected the generated `h1.c` and found something important :
 
@@ -74,7 +74,7 @@ Even setting aside the memory issue, we inspected the generated `h1.c` and found
 EpochBlock_Flags_pure_sw | EpochBlock_Flags_epoch_start | EpochBlock_Flags_epoch_end
 ```
 
-**Every block is flagged `pure_sw`** — software execution, no NPU hardware acceleration at all. X-CUBE-AI decided our model is too small (~8 KB, ~2800 parameters) to benefit from the NPU. The hardware unit was never going to be used in the first place.
+**Every block is flagged `pure_sw`** , software execution, no NPU hardware acceleration at all. X-CUBE-AI decided our model is too small (~8 KB, ~2800 parameters) to benefit from the NPU. The hardware unit was never going to be used in the first place.
 
 So the situation was :
 - The NPU hardware : not solicited
@@ -85,7 +85,7 @@ So the situation was :
 
 ## The fix (in the working version)
 
-We dropped LL_ATON entirely and switched to `h1_infer()` — our own C float32 implementation of the same forward pass, same weights, same math, but operating in normal CPU-accessible SRAM.
+We dropped LL_ATON entirely and switched to `h1_infer()` , our own C float32 implementation of the same forward pass, same weights, same math, but operating in normal CPU-accessible SRAM.
 
 ```c
 // Removed from working version :
@@ -123,7 +123,7 @@ Found at the root of this folder. Written during the debugging session :
 > et ton code n'est qu'un instant dans le temps.  
 > Mais par pitié, vérifie tes résistances de pull-up sur l'I2C avant de méditer."*
 
-Coordinates in the file : `45.8992° N, 6.1290° E` — Lac d'Annecy. Accurate.
+Coordinates in the file : `45.8992° N, 6.1290° E` , Lac d'Annecy. Accurate.
 
 ---
 
@@ -132,12 +132,12 @@ Coordinates in the file : `45.8992° N, 6.1290° E` — Lac d'Annecy. Accurate.
 | | |
 |---|---|
 | **What we tried** | Hardware NPU inference via X-CUBE-AI / LL_ATON runtime |
-| **What happened** | BusFault at `0x342E0000` (AXISRAM5 — NPU AXI bus only) |
+| **What happened** | BusFault at `0x342E0000` (AXISRAM5 , NPU AXI bus only) |
 | **Why** | CPU has no physical path to that memory region |
-| **Bonus finding** | Model was pure_sw anyway — NPU hardware never involved |
-| **Resolution** | `h1_infer()` — same math, CPU-accessible RAM, < 1 ms |
+| **Bonus finding** | Model was pure_sw anyway , NPU hardware never involved |
+| **Resolution** | `h1_infer()` , same math, CPU-accessible RAM, < 1 ms |
 | **Lesson** | Always check the memory map before the runtime does |
 
 ---
 
-*The crash is preserved here intentionally — understanding why something fails is as valuable as making it work.*
+*The crash is preserved here intentionally , understanding why something fails is as valuable as making it work.*

@@ -293,7 +293,7 @@ Python/Keras model (.keras)
 
 ---
 
-## 6. Pipeline ML — Entraînement Python/TensorFlow
+## 6. Pipeline ML | Entraînement Python/TensorFlow
 
 ### Source de données
 
@@ -380,7 +380,7 @@ model.save("meteo_h1_model.keras")
 
 ---
 
-## 7. Backend VPS — API Flask
+## 7. Backend VPS | API Flask
 
 ### Stack technique
 
@@ -501,7 +501,7 @@ Dashboard single-page en HTML/CSS/JS pur, sans framework. Thème sombre/clair co
 - Modèles VPS J+1/J+2/J+3
 - **Tableau comparatif Edge vs Cloud** (8 critères)
 
-### Sparklines — implémentation Canvas 2D
+### Sparklines | implémentation Canvas 2D
 
 ```javascript
 function drawSparkline(vals, canvasId, hexColor) {
@@ -771,7 +771,7 @@ README.md
 
 ---
 
-## 15. Déploiement — Guide pas à pas
+## 15. Déploiement : Guide pas à pas
 
 ### A. Firmware STM32
 
@@ -868,7 +868,7 @@ systemctl restart atmosai
 
 **Solution retenue :** API Flask sur VPS Linux (Gunicorn + systemd), SQLite pour le stockage. Cette approche est **plus professionnelle, plus flexible et sans rate limit**.
 
-### Abandon du NPU — Analyse technique complète
+### Abandon du NPU Analyse technique complète
 
 Lors de l'intégration de X-CUBE-AI, le runtime LL_ATON provoquait un **BusFault** (Hard Fault) au premier appel `memcpy` vers l'adresse `0x342e0000`.
 
@@ -889,7 +889,7 @@ Carte mémoire STM32N657X0 :
   → Toute tentative d'accès CPU = BusFault immédiat
 ```
 
-**Aggravant :** L'analyse du fichier `h1.c` généré par X-CUBE-AI révèle que **tous** les blocs d'exécution sont flagués `EpochBlock_Flags_pure_sw` — le NPU matériel n'est donc **pas utilisé du tout** même par le runtime ATON. Le modèle trop petit (< 10 Ko) ne justifie pas l'accélération NPU.
+**Aggravant :** L'analyse du fichier `h1.c` généré par X-CUBE-AI révèle que **tous** les blocs d'exécution sont flagués `EpochBlock_Flags_pure_sw` le NPU matériel n'est donc **pas utilisé du tout** même par le runtime ATON. Le modèle trop petit (< 10 Ko) ne justifie pas l'accélération NPU.
 
 **Solution :** Utilisation directe de `h1_infer()`, une implémentation C float32 des mêmes poids, mathématiquement strictement identique, qui opère uniquement sur la SRAM accessible au CPU.
 
