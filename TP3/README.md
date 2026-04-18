@@ -299,6 +299,6 @@ API gratuite, sans clé, sans limite de débit raisonnable, 10 ans d'historique,
 
 ## 👤 Auteur
 
-William / Franck / Mostapha — L3 Réseaux & Télécoms  
+William / Franck / Mostapha — L3 TRI // ESET 
 Module ETRS606 — IA Embarquée  
 Université Savoie Mont Blanc

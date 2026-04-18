@@ -1,0 +1,87 @@
+# User-managed additions — NOT overwritten by CubeIDE
+# Compiles h1.c and the LL_ATON runtime sources directly (with -mcmse, required
+# because this FSBL runs in TrustZone secure world).
+
+# ---------------------------------------------------------------------------
+# Common compiler flags (same as the rest of the project)
+# ---------------------------------------------------------------------------
+ATON_CFLAGS := -mcpu=cortex-m55 -std=gnu11 -g3 -DDEBUG -DUSE_HAL_DRIVER \
+  -DSTM32N657xx -DNX_INCLUDE_USER_DEFINE_FILE -DTX_INCLUDE_USER_DEFINE_FILE \
+  -DTX_SINGLE_MODE_SECURE=1 -DLL_ATON_PLATFORM=12 -DLL_ATON_OSAL=4 -DLL_ATON_SW_FALLBACK=1 \
+  -I../../../FSBL/NetXDuo/App \
+  -I../../../Middlewares/ST/AI/Npu/ll_aton \
+  -I../../../Middlewares/ST/AI/Npu/Devices/STM32N6XX \
+  -I../../../Middlewares/ST/AI/Inc \
+  -I../../../Middlewares/ST/AI/Npu/Inc \
+  -I../../../FSBL/X-CUBE-AI/App \
+  -I../../../Drivers/BSP/Components/lan8742 \
+  -I../../../FSBL/NetXDuo/Target \
+  -I../../../FSBL/Core/Inc \
+  -I../../../FSBL/AZURE_RTOS/App \
+  -I../../../Drivers/STM32N6xx_HAL_Driver/Inc \
+  -I../../../Drivers/CMSIS/Device/ST/STM32N6xx/Include \
+  -I../../../Drivers/STM32N6xx_HAL_Driver/Inc/Legacy \
+  -I../../../Middlewares/ST/netxduo/addons/dhcp \
+  -I../../../Middlewares/ST/netxduo/tsn/inc \
+  -I../../../Middlewares/ST/netxduo/common/drivers/ethernet \
+  -I../../../Middlewares/ST/threadx/common/inc \
+  -I../../../Middlewares/ST/netxduo/common/inc \
+  -I../../../Middlewares/ST/netxduo/ports/cortex_m55/gnu/inc \
+  -I../../../Middlewares/ST/threadx/ports/cortex_m55/gnu/inc \
+  -I../../../Drivers/CMSIS/Include \
+  -I"C:/Users/will/Documents/Cube/Nx_TCP_Echo_Client/STM32CubeIDE/FSBL/Drivers/STM32N6xx_HAL_Driver" \
+  -I"C:/Users/will/Documents/Cube/Nx_TCP_Echo_Client/STM32CubeIDE/FSBL/Drivers/STMems" \
+  -O0 -ffunction-sections -fdata-sections -Wall -fstack-usage \
+  -fcyclomatic-complexity -mcmse -MMD -MP --specs=nano.specs \
+  -mfpu=fpv5-d16 -mfloat-abi=hard -mthumb
+
+# ---------------------------------------------------------------------------
+# Sources to add to USER_OBJS
+# ---------------------------------------------------------------------------
+ATON_SRC_DIR  := ../../../Middlewares/ST/AI/Npu/ll_aton
+ATON_DEV_DIR  := ../../../Middlewares/ST/AI/Npu/Devices/STM32N6XX
+XCUBE_SRC_DIR := ../../../FSBL/X-CUBE-AI/App
+ATON_OBJ_DIR  := Application/User/X-CUBE-AI/App
+
+ATON_OBJS := \
+  $(ATON_OBJ_DIR)/h1.o \
+  $(ATON_OBJ_DIR)/ll_aton.o \
+  $(ATON_OBJ_DIR)/ll_aton_rt_main.o \
+  $(ATON_OBJ_DIR)/ll_aton_runtime.o \
+  $(ATON_OBJ_DIR)/ll_aton_lib.o \
+  $(ATON_OBJ_DIR)/ll_aton_lib_sw_operators.o \
+  $(ATON_OBJ_DIR)/ll_aton_osal_threadx.o \
+  $(ATON_OBJ_DIR)/ll_aton_util.o \
+  $(ATON_OBJ_DIR)/ll_sw_float.o \
+  $(ATON_OBJ_DIR)/ll_sw_integer.o \
+  $(ATON_OBJ_DIR)/mcu_cache.o \
+  $(ATON_OBJ_DIR)/h1_inference.o
+
+USER_OBJS += $(ATON_OBJS)
+
+# syscalls.c (stubs newlib _write/_close/etc.) — non détecté par CubeIDE
+CORE_SRC_DIR := ../../../FSBL/Core/Src
+CORE_OBJ_DIR := Application/User/Core/Src
+
+$(CORE_OBJ_DIR)/syscalls.o: $(CORE_SRC_DIR)/syscalls.c
+	@mkdir -p $(dir $@)
+	arm-none-eabi-gcc "$<" $(ATON_CFLAGS) -MF"$(@:.o=.d)" -MT"$@" -c -o "$@"
+
+USER_OBJS += $(CORE_OBJ_DIR)/syscalls.o
+
+LIBS += "C:/Users/will/Documents/Cube/Nx_TCP_Echo_Client/Middlewares/ST/AI/Lib/NetworkRuntime1020_CM55_GCC.a"
+
+# ---------------------------------------------------------------------------
+# Build rules
+# ---------------------------------------------------------------------------
+$(ATON_OBJ_DIR)/%.o: $(XCUBE_SRC_DIR)/%.c
+	@mkdir -p $(dir $@)
+	arm-none-eabi-gcc "$<" $(ATON_CFLAGS) -MF"$(@:.o=.d)" -MT"$@" -c -o "$@"
+
+$(ATON_OBJ_DIR)/%.o: $(ATON_SRC_DIR)/%.c
+	@mkdir -p $(dir $@)
+	arm-none-eabi-gcc "$<" $(ATON_CFLAGS) -MF"$(@:.o=.d)" -MT"$@" -c -o "$@"
+
+$(ATON_OBJ_DIR)/%.o: $(ATON_DEV_DIR)/%.c
+	@mkdir -p $(dir $@)
+	arm-none-eabi-gcc "$<" $(ATON_CFLAGS) -MF"$(@:.o=.d)" -MT"$@" -c -o "$@"

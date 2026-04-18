@@ -1,0 +1,17 @@
+../../../Middlewares/ST/AI/Npu/ll_aton/ll_aton_osal_threadx.h:85:22:_my_disable_preemption	24	static,ignoring_inline_asm
+../../../Middlewares/ST/AI/Npu/ll_aton/ll_aton_osal_threadx.h:102:22:_my_enable_preemption	24	static,ignoring_inline_asm
+../../../Middlewares/ST/AI/Npu/ll_aton/ll_aton_osal_threadx.h:118:22:_my_threadx_deinit	32	static
+../../../Middlewares/ST/AI/Npu/ll_aton/ll_aton_osal_threadx.h:140:22:_my_tx_thread_priority_get	48	static
+../../../Middlewares/ST/AI/Npu/ll_aton/ll_aton_osal_threadx.h:148:22:_my_tx_thread_priority_change	24	static
+../../../Middlewares/ST/AI/Npu/ll_aton/ll_aton_osal_threadx.h:158:23:_my_tx_get_count	32	static
+../../../Middlewares/ST/AI/Npu/ll_aton/ll_aton_osal_threadx.h:166:22:_my_tx_mutex_put_prioritized	24	static
+../../../Middlewares/ST/AI/Npu/ll_aton/ll_aton_osal_threadx.h:176:22:_my_tx_semaphore_put_prioritized	24	static
+../../../Middlewares/ST/AI/Npu/ll_aton/ll_aton_osal_threadx.h:186:22:_my_tx_semaphore_put_isr_non_prioritized	40	static,ignoring_inline_asm
+../../../Middlewares/ST/AI/Npu/ll_aton/ll_aton_osal_rtos_template.c:52:6:aton_osal_threadx_init	16	static
+../../../Middlewares/ST/AI/Npu/ll_aton/ll_aton_osal_rtos_template.c:86:6:aton_osal_threadx_deinit	8	static
+../../../Middlewares/ST/AI/Npu/ll_aton/ll_aton_osal_rtos_template.c:95:6:aton_osal_threadx_dao_lock	24	static
+../../../Middlewares/ST/AI/Npu/ll_aton/ll_aton_osal_rtos_template.c:164:6:aton_osal_threadx_dao_unlock	24	static
+../../../Middlewares/ST/AI/Npu/ll_aton/ll_aton_osal_rtos_template.c:221:6:aton_osal_threadx_lock	16	static
+../../../Middlewares/ST/AI/Npu/ll_aton/ll_aton_osal_rtos_template.c:233:6:aton_osal_threadx_unlock	16	static
+../../../Middlewares/ST/AI/Npu/ll_aton/ll_aton_osal_rtos_template.c:272:6:aton_osal_threadx_wfe	16	static
+../../../Middlewares/ST/AI/Npu/ll_aton/ll_aton_osal_rtos_template.c:287:6:aton_osal_threadx_signal_event	16	static

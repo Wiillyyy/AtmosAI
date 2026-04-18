@@ -1,0 +1,17 @@
+../../../Drivers/STM32N6xx_HAL_Driver/Inc/stm32n6xx_ll_bus.h:1165:22:LL_AHB3_GRP1_EnableClock	24	static
+../../../Drivers/STM32N6xx_HAL_Driver/Inc/stm32n6xx_ll_bus.h:1407:22:LL_AHB4_GRP1_EnableClock	24	static
+../../../Drivers/STM32N6xx_HAL_Driver/Inc/stm32n6xx_ll_bus.h:1755:22:LL_AHB5_GRP1_EnableClock	24	static
+C:/Users/will/Documents/Cube/Nx_TCP_Echo_Client/FSBL/Core/Src/main.c:108:5:main	8	static,ignoring_inline_asm
+C:/Users/will/Documents/Cube/Nx_TCP_Echo_Client/FSBL/Core/Src/main.c:180:6:SystemClock_Config	624	static
+C:/Users/will/Documents/Cube/Nx_TCP_Echo_Client/FSBL/Core/Src/main.c:298:13:MX_CACHEAXI_Init	8	static
+C:/Users/will/Documents/Cube/Nx_TCP_Echo_Client/FSBL/Core/Src/main.c:324:13:MX_ETH1_Init	16	static
+C:/Users/will/Documents/Cube/Nx_TCP_Echo_Client/FSBL/Core/Src/main.c:376:13:MX_I2C1_Init	8	static
+C:/Users/will/Documents/Cube/Nx_TCP_Echo_Client/FSBL/Core/Src/main.c:424:15:SystemIsolation_Config	16	static
+C:/Users/will/Documents/Cube/Nx_TCP_Echo_Client/FSBL/Core/Src/main.c:477:13:MX_USART1_UART_Init	8	static
+C:/Users/will/Documents/Cube/Nx_TCP_Echo_Client/FSBL/Core/Src/main.c:525:13:MX_GPIO_Init	32	static
+C:/Users/will/Documents/Cube/Nx_TCP_Echo_Client/FSBL/Core/Src/main.c:580:1:__io_putchar	16	static
+C:\ST\STM32CubeIDE_2.1.0\STM32CubeIDE\plugins\com.st.stm32cube.ide.mcu.externaltools.gnu-tools-for-stm32.14.3.rel1.win32_1.0.100.202602081740\tools\bin/../lib/gcc/arm-none-eabi/14.3.1/../../../../arm-none-eabi/include/stdio.h:206:5:printf	272	static
+C:/Users/will/Documents/Cube/Nx_TCP_Echo_Client/FSBL/Core/Src/main.c:603:6:Success_Handler	8	static
+C:/Users/will/Documents/Cube/Nx_TCP_Echo_Client/FSBL/Core/Src/main.c:619:6:MPU_Config	40	static,ignoring_inline_asm
+C:/Users/will/Documents/Cube/Nx_TCP_Echo_Client/FSBL/Core/Src/main.c:674:6:HAL_TIM_PeriodElapsedCallback	16	static
+C:/Users/will/Documents/Cube/Nx_TCP_Echo_Client/FSBL/Core/Src/main.c:692:6:Error_Handler	8	static

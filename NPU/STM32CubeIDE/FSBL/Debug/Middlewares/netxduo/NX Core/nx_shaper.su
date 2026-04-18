@@ -1,0 +1,16 @@
+C:/Users/will/Documents/Cube/Nx_TCP_Echo_Client/Middlewares/ST/netxduo/tsn/src/nx_shaper.c:69:6:nx_shaper_create	48	static
+C:/Users/will/Documents/Cube/Nx_TCP_Echo_Client/Middlewares/ST/netxduo/tsn/src/nx_shaper.c:179:6:nx_shaper_delete	24	static
+C:/Users/will/Documents/Cube/Nx_TCP_Echo_Client/Middlewares/ST/netxduo/tsn/src/nx_shaper.c:262:6:nx_shaper_config	32	static
+C:/Users/will/Documents/Cube/Nx_TCP_Echo_Client/Middlewares/ST/netxduo/tsn/src/nx_shaper.c:326:6:nx_shaper_hw_queue_set	24	static
+C:/Users/will/Documents/Cube/Nx_TCP_Echo_Client/Middlewares/ST/netxduo/tsn/src/nx_shaper.c:429:6:nx_shaper_default_mapping_get	32	static
+C:/Users/will/Documents/Cube/Nx_TCP_Echo_Client/Middlewares/ST/netxduo/tsn/src/nx_shaper.c:660:6:nx_shaper_current_mapping_get	32	static
+C:/Users/will/Documents/Cube/Nx_TCP_Echo_Client/Middlewares/ST/netxduo/tsn/src/nx_shaper.c:732:6:nx_shaper_hw_queue_number_get	16	static
+C:/Users/will/Documents/Cube/Nx_TCP_Echo_Client/Middlewares/ST/netxduo/tsn/src/nx_shaper.c:782:6:nx_shaper_hw_cbs_queue_number_get	24	static
+C:/Users/will/Documents/Cube/Nx_TCP_Echo_Client/Middlewares/ST/netxduo/tsn/src/nx_shaper.c:841:6:nx_shaper_port_rate_get	16	static
+C:/Users/will/Documents/Cube/Nx_TCP_Echo_Client/Middlewares/ST/netxduo/tsn/src/nx_shaper.c:892:6:nx_shaper_mapping_set	32	static
+C:/Users/will/Documents/Cube/Nx_TCP_Echo_Client/Middlewares/ST/netxduo/tsn/src/nx_shaper.c:970:6:nx_shaper_cbs_parameter_set	48	static
+C:/Users/will/Documents/Cube/Nx_TCP_Echo_Client/Middlewares/ST/netxduo/tsn/src/nx_shaper.c:1075:6:nx_shaper_hw_queue_id_get	32	static
+C:/Users/will/Documents/Cube/Nx_TCP_Echo_Client/Middlewares/ST/netxduo/tsn/src/nx_shaper.c:1144:6:nx_shaper_tas_parameter_set	488	static
+C:/Users/will/Documents/Cube/Nx_TCP_Echo_Client/Middlewares/ST/netxduo/tsn/src/nx_shaper.c:1378:6:nx_shaper_express_queue_set	32	static
+C:/Users/will/Documents/Cube/Nx_TCP_Echo_Client/Middlewares/ST/netxduo/tsn/src/nx_shaper.c:1442:6:nx_shaper_sdu_tx_time_get	32	static
+C:/Users/will/Documents/Cube/Nx_TCP_Echo_Client/Middlewares/ST/netxduo/tsn/src/nx_shaper.c:1501:6:nx_shaper_fp_parameter_set	64	static

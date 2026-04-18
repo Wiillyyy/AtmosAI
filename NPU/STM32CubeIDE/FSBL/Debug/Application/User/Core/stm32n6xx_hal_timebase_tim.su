@@ -1,0 +1,4 @@
+../../../Drivers/STM32N6xx_HAL_Driver/Inc/stm32n6xx_ll_bus.h:2273:22:LL_APB1_GRP1_EnableClock	24	static
+C:/Users/will/Documents/Cube/Nx_TCP_Echo_Client/FSBL/Core/Src/stm32n6xx_hal_timebase_tim.c:41:19:HAL_InitTick	88	static
+C:/Users/will/Documents/Cube/Nx_TCP_Echo_Client/FSBL/Core/Src/stm32n6xx_hal_timebase_tim.c:99:6:HAL_SuspendTick	4	static
+C:/Users/will/Documents/Cube/Nx_TCP_Echo_Client/FSBL/Core/Src/stm32n6xx_hal_timebase_tim.c:111:6:HAL_ResumeTick	4	static

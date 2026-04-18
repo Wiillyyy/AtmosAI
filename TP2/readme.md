@@ -75,6 +75,6 @@ Le template fournit une base FreeRTOS + LwIP préconfigurée avec socket BSD, ce
 
 ## 👤 Auteur
 
-William / Franck / Mostapha — L3 Réseaux & Télécoms  
+William / Franck / Mostapha — L3 TRI // ESET 
 Module ETRS606 — IA Embarquée  
 Université Savoie Mont Blanc

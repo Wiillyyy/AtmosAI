@@ -1,0 +1,16 @@
+C:/Users/will/Documents/Cube/Nx_TCP_Echo_Client/Middlewares/ST/netxduo/common/src/nx_link.c:75:6:nx_link_vlan_set	4
+C:/Users/will/Documents/Cube/Nx_TCP_Echo_Client/Middlewares/ST/netxduo/common/src/nx_link.c:144:6:nx_link_vlan_get	6
+C:/Users/will/Documents/Cube/Nx_TCP_Echo_Client/Middlewares/ST/netxduo/common/src/nx_link.c:213:6:nx_link_vlan_clear	4
+C:/Users/will/Documents/Cube/Nx_TCP_Echo_Client/Middlewares/ST/netxduo/common/src/nx_link.c:281:6:nx_link_multicast_join	4
+C:/Users/will/Documents/Cube/Nx_TCP_Echo_Client/Middlewares/ST/netxduo/common/src/nx_link.c:359:6:nx_link_multicast_leave	4
+C:/Users/will/Documents/Cube/Nx_TCP_Echo_Client/Middlewares/ST/netxduo/common/src/nx_link.c:442:6:nx_link_ethernet_packet_send	6
+C:/Users/will/Documents/Cube/Nx_TCP_Echo_Client/Middlewares/ST/netxduo/common/src/nx_link.c:523:6:nx_link_raw_packet_send	5
+C:/Users/will/Documents/Cube/Nx_TCP_Echo_Client/Middlewares/ST/netxduo/common/src/nx_link.c:607:6:nx_link_packet_receive_callback_add	7
+C:/Users/will/Documents/Cube/Nx_TCP_Echo_Client/Middlewares/ST/netxduo/common/src/nx_link.c:696:6:nx_link_packet_receive_callback_remove	7
+C:/Users/will/Documents/Cube/Nx_TCP_Echo_Client/Middlewares/ST/netxduo/common/src/nx_link.c:787:6:nx_link_ethernet_header_parse	14
+C:/Users/will/Documents/Cube/Nx_TCP_Echo_Client/Middlewares/ST/netxduo/common/src/nx_link.c:907:6:nx_link_ethernet_header_add	5
+C:/Users/will/Documents/Cube/Nx_TCP_Echo_Client/Middlewares/ST/netxduo/common/src/nx_link.c:1021:6:nx_link_packet_transmitted	6
+C:/Users/will/Documents/Cube/Nx_TCP_Echo_Client/Middlewares/ST/netxduo/common/src/nx_link.c:1110:6:nx_link_ethernet_packet_received	27
+C:/Users/will/Documents/Cube/Nx_TCP_Echo_Client/Middlewares/ST/netxduo/common/src/nx_link.c:1380:6:nx_link_vlan_interface_create	9
+C:/Users/will/Documents/Cube/Nx_TCP_Echo_Client/Middlewares/ST/netxduo/common/src/nx_link.c:1509:6:nx_link_driver_request_preprocess	10
+C:/Users/will/Documents/Cube/Nx_TCP_Echo_Client/Middlewares/ST/netxduo/common/src/nx_link.c:1630:6:nx_link_vlan_interface_status_change	5

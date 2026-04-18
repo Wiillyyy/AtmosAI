@@ -945,5 +945,10 @@ Allocation **statique** de 4096 octets pour le stack du thread capteur, au lieu 
 - [Chart.js documentation](https://www.chartjs.org/docs/)
 
 ---
+## 👤 Auteur
+
+William / Franck / Mostapha — L3 TRI // ESET
+Module ETRS606 — IA Embarquée  
+Université Savoie Mont Blanc
 
 *README généré par William (el famoso Sovereign Lord of the TRI)*

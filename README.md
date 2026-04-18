@@ -1,75 +1,75 @@
-# AtmosAI — Station météo embarquée avec IA Edge & Cloud
+# AtmosAI — Embedded Weather Station with Edge & Cloud AI
 
-> **Module ETRS606 — IA Embarquée · Université Savoie Mont Blanc**  
+> **Module ETRS606 — Embedded AI · Université Savoie Mont Blanc**  
 > William Z. · Franck G. · Mostapha K.
 
 ---
 
-## Ce qu'on a construit
+## What we built
 
-On a conçu une station météo embarquée complète, de bout en bout — du capteur physique jusqu'au site web hébergé sur notre propre serveur, en passant par un réseau de neurones qui tourne **directement sur notre microcontrôleur**, sans cloud, sans internet, en moins d'une milliseconde.
+We designed a complete end-to-end embedded weather station — from the physical sensor all the way to a website hosted on our own server, including a neural network running **directly on our microcontroller**, no cloud, no internet, in under a millisecond.
 
-Notre carte STM32 capte la température, l'humidité et la pression toutes les 20 secondes. Elle calcule 13 features en temps réel, lance une inférence MLP complète localement, et envoie le tout — mesures + prédiction — vers notre API Flask hébergée sur VPS. Le site web affiche tout en direct, se rafraîchit automatiquement, et on peut même envoyer des commandes à la carte depuis le navigateur.
+Our STM32 board reads temperature, humidity and pressure every 20 seconds. It computes 13 features in real time, runs a full MLP inference locally, and sends everything — measurements + prediction — to our Flask API hosted on a VPS. The website displays it all live, auto-refreshes, and we can even send commands to the board from the browser.
 
-On n'a pas utilisé ThingSpeak. On n'a pas utilisé MATLAB. On a tout fait nous-mêmes.
+We didn't use ThingSpeak. We didn't use MATLAB. We did everything ourselves.
 
 ---
 
-## L'architecture en un coup d'œil
+## Architecture at a glance
 
 ```
 ┌──────────────────────────────────────────────────────┐
-│                   CARTE STM32N657X0                  │
+│                   STM32N657X0 BOARD                  │
 │                                                      │
-│  HTS221 (temp/rhum) + LPS22HH (pression)  ← I2C     │
+│  HTS221 (temp/hum) + LPS22HH (pressure)  ← I2C      │
 │              ↓                                       │
-│   Ring buffer 560 échantillons (~3h)                 │
+│   Ring buffer 560 samples (~3h)                      │
 │              ↓                                       │
-│   Calcul 13 features en temps réel                   │
+│   13 features computed in real time                  │
 │              ↓                                       │
 │   h1_infer() — MLP C float32 — < 1ms                 │
-│   Résultat : Clair / Pluie / Neige + confiance       │
+│   Output: Clear / Rain / Snow + confidence           │
 │              ↓                                       │
-│   HTTP POST toutes les ~20s via Ethernet             │
+│   HTTP POST every ~20s via Ethernet                  │
 └──────────────────────┬───────────────────────────────┘
                        ↓
 ┌──────────────────────────────────────────────────────┐
-│              VPS — API Flask + SQLite                │
+│              VPS — Flask API + SQLite                │
 │                                                      │
-│   Stockage SQLite → inférence Keras J+1/J+2/J+3     │
-│   Routes publiques + admin protégées par clé API     │
+│   SQLite storage → Keras inference J+1/J+2/J+3      │
+│   Public routes + admin routes protected by API key  │
 └──────────────────────┬───────────────────────────────┘
                        ↓
 ┌──────────────────────────────────────────────────────┐
-│            Dashboard Web — index.html                │
+│            Web Dashboard — index.html                │
 │                                                      │
-│   Métriques temps réel · Sparklines · Prédictions    │
-│   Features STM32 live · Historique · Comparatif      │
+│   Live metrics · Sparklines · Predictions            │
+│   Live STM32 features · History · Comparison         │
 └──────────────────────────────────────────────────────┘
 ```
 
 ---
 
-## Le matériel
+## Hardware
 
-On utilise une carte **NUCLEO-N657X0** (STM32N657X0 — Cortex-M55 à 800 MHz) avec le shield **X-NUCLEO-IKS01A3**. Les capteurs communiquent en I2C :
-- **HTS221** pour la température et l'humidité (±0.5°C / ±3.5% RH)
-- **LPS22HH** pour la pression atmosphérique (±0.1 hPa)
+We use a **NUCLEO-N657X0** board (STM32N657X0 — Cortex-M55 at 800 MHz) with the **X-NUCLEO-IKS01A3** shield. Sensors communicate over I2C :
+- **HTS221** for temperature and humidity (±0.5°C / ±3.5% RH)
+- **LPS22HH** for atmospheric pressure (±0.1 hPa)
 
-La carte tourne sous **Azure RTOS ThreadX** avec deux threads indépendants : un thread capteur qui lit, calcule et infère, et un thread TCP qui poste les résultats au VPS.
+The board runs **Azure RTOS ThreadX** with two independent threads : a sensor thread that reads, computes and infers, and a TCP thread that posts results to the VPS.
 
 ---
 
-## Le modèle embarqué — H+1
+## The embedded model — H+1
 
-C'est la partie dont on est le plus fiers.
+This is the part we're most proud of.
 
-On a entraîné un MLP en Python/TensorFlow sur **43 821 heures** de données météo historiques à Aix-les-Bains (Open-Meteo, 2019–2023). On a exporté les poids en C float32 via X-CUBE-AI. Le réseau tourne intégralement sur la carte — pas de dépendance réseau, pas de latence cloud, pas de NPU.
+We trained an MLP in Python/TensorFlow on **43,821 hours** of historical weather data from Aix-les-Bains (Open-Meteo, 2019–2023). We exported the weights to C float32 via X-CUBE-AI. The network runs entirely on the board — no network dependency, no cloud latency, no NPU.
 
 ```
 Input (13 features)
       ↓
-Dense(32, ReLU)   ← BN fusionné dans les poids
+Dense(32, ReLU)   ← BN fused into weights
       ↓
 Dense(32, ReLU)
       ↓
@@ -77,147 +77,147 @@ Dense(16, ReLU)
       ↓
 Dense(3, Softmax)
       ↓
-Clair · Pluie · Neige
+Clear · Rain · Snow
 ```
 
-**87.5% d'accuracy. ~8 Ko. Inférence en < 1 ms. Charge CPU < 1%.**
+**87.5% accuracy. ~8 KB. Inference in < 1 ms. CPU load < 1%.**
 
-### Les 13 features
+### The 13 features
 
-Ce qui rend notre modèle robuste, c'est qu'il ne regarde pas juste les valeurs brutes. Il reçoit des **features calculées dynamiquement** depuis un ring buffer de 560 échantillons (~3h d'historique) maintenu en RAM :
+What makes our model robust is that it doesn't just look at raw values. It receives **dynamically computed features** from a ring buffer of 560 samples (~3h of history) kept in RAM :
 
 | # | Feature | Source |
 |---|---|---|
-| 1–3 | temp, rhum, pres | Capteurs directs |
+| 1–3 | temp, hum, pres | Direct sensors |
 | 4–5 | ΔT 1h, ΔT 3h | Ring buffer |
 | 6–7 | ΔP 1h, ΔP 3h | Ring buffer |
 | 8 | ΔH 1h | Ring buffer |
-| 9–10 | hour_sin, hour_cos | RTC (encodage cyclique) |
-| 11–12 | month_sin, month_cos | RTC (encodage cyclique) |
-| 13 | T − point de rosée | Formule de Magnus embarquée |
+| 9–10 | hour_sin, hour_cos | RTC (cyclic encoding) |
+| 11–12 | month_sin, month_cos | RTC (cyclic encoding) |
+| 13 | T − dew point | Embedded Magnus formula |
 
-Les deltas capturent la **tendance** (chute de pression → pluie probable). L'encodage sin/cos de l'heure et du mois évite l'artefact "23h est loin de 0h" — le modèle sait que c'est continu. Le point de rosée est directement prédictif de la condensation et des précipitations.
+Deltas capture the **trend** (pressure drop → likely rain). The sin/cos encoding of hour and month avoids the "11pm is far from midnight" artefact — the model knows time is continuous. The dew point is directly predictive of condensation and precipitation.
 
-### Pourquoi le NPU n'est pas utilisé
+### Why the NPU is not used
 
-On a essayé. X-CUBE-AI a généré le code avec le runtime LL_ATON. Au premier appel, BusFault — crash immédiat. Après analyse des registres (CFSR, adresse fautive), on a identifié la cause : le buffer d'entrée ATON pointe vers `0x342e0000` (AXISRAM5/npuRAM5), une zone câblée **exclusivement sur le bus AXI du NPU**. Le CPU n'a aucun chemin d'accès vers cette mémoire.
+We tried. X-CUBE-AI generated the code with the LL_ATON runtime. On the first call, BusFault — immediate crash. After analysing the CFSR register and the faulting address, we identified the cause : the ATON input buffer points to `0x342e0000` (AXISRAM5/npuRAM5), a region wired **exclusively to the NPU AXI bus**. The CPU has no access path to this memory.
 
-De toute façon, X-CUBE-AI avait compilé tous les blocs en `EpochBlock_Flags_pure_sw` — le NPU matériel n'était pas sollicité, notre modèle est trop petit pour le justifier. Notre `h1_infer()` fait exactement les mêmes calculs, mêmes poids, mêmes résultats — mais dans la SRAM accessible au CPU.
+Anyway, X-CUBE-AI had compiled all blocks as `EpochBlock_Flags_pure_sw` — the hardware NPU wasn't involved at all, our model is too small to justify it. Our `h1_infer()` does exactly the same computations, same weights, same results — but in CPU-accessible SRAM.
 
 ---
 
-## Le backend VPS
+## The VPS backend
 
-On a refusé de dépendre de ThingSpeak. On a déployé notre propre stack :
+We refused to depend on ThingSpeak. We deployed our own stack :
 
-- **Flask** (Python) servi par **Gunicorn**
-- **SQLite** pour le stockage des mesures
-- **Caddy** pour servir les fichiers statiques
-- **systemd** pour la résilience (redémarrage automatique)
+- **Flask** (Python) served by **Gunicorn**
+- **SQLite** for measurement storage
+- **Caddy** to serve static files
+- **systemd** for resilience (automatic restart)
 
-Notre API expose des routes publiques (lecture des données, prévisions) et des routes admin protégées par clé (`purge, vider la base, envoyer une commande à la carte`).
+Our API exposes public routes (data reading, forecasts) and admin routes protected by key (`purge, clear database, send command to board`).
 
-### Les modèles cloud J+1/J+2/J+3
+### Cloud models J+1 / J+2 / J+3
 
-En complément du H+1 embarqué, on a entraîné **3 modèles Keras indépendants** sur le VPS pour des prévisions à plus long terme, sur les mêmes 13 features (recalculées depuis l'historique SQLite) :
+Alongside the embedded H+1, we trained **3 independent Keras models** on the VPS for longer-range forecasts, using the same 13 features (recomputed from the SQLite history) :
 
-| Modèle | Horizon | Balanced Accuracy |
+| Model | Horizon | Balanced Accuracy |
 |---|---|---|
 | J+1 | +24h | 64.3% |
 | J+2 | +48h | 61.2% |
 | J+3 | +72h | 54.4% |
 
-La dégradation avec l'horizon est attendue — prédire à 72h avec uniquement des capteurs locaux sans données NWP est un problème difficile.
+The degradation with horizon is expected — predicting at 72h with only local sensors and no NWP data is a fundamentally hard problem.
 
 ---
 
-## Le dashboard web
+## The web dashboard
 
-Un fichier HTML/CSS/JS vanilla, aucun framework. Thème sombre/clair commutable. Rafraîchissement automatique toutes les 15 secondes.
+A vanilla HTML/CSS/JS file, no framework. Switchable dark/light theme. Auto-refresh every 15 seconds.
 
-**Ce qu'on affiche sur le dashboard :**
-- Valeurs temps réel en grand (température cyan, humidité amber, pression vert)
-- Prédiction H+1 de la carte : classe + barre de confiance animée + emoji flottant
-- **Features STM32 live** : les 10 valeurs calculées par le JS depuis l'historique (deltas, point de rosée, cycliques) — colorées vert/rouge selon leur signe, exactement les mêmes formules qu'en C embarqué
-- 3 sparklines Canvas 2D (courbes bézier avec gradient de remplissage)
-- Tableau des dernières mesures
-- Onglet Historique avec graphiques Chart.js interactifs
-- Onglet Modèle IA avec tout le détail technique + tableau comparatif Edge vs Cloud
+**What we display on the dashboard :**
+- Live values in large (temperature cyan, humidity amber, pressure green)
+- H+1 prediction from the board : class + animated confidence bar + floating emoji
+- **Live STM32 features** : 10 values computed in JS from history (deltas, dew point, cyclical) — colour-coded green/red by sign, exactly the same formulas as in the embedded C
+- 3 Canvas 2D sparklines (bézier curves with gradient fill)
+- Latest measurements table
+- History tab with interactive Chart.js charts
+- AI Model tab with full technical details + Edge vs Cloud comparison table
 
-**Page admin** (`admin.html`) : gestion de la base, purge, commandes downlink vers la carte (dont un mode stroboscope pour la démo).
+**Admin page** (`admin.html`) : database management, purge, downlink commands to the board (including a strobe light mode for the demo).
 
 ---
 
-## Mesure de performance embarquée
+## Embedded performance measurement
 
-On mesure en temps réel la charge CPU et la consommation estimée grâce au **compteur DWT** (Data Watchpoint and Trace) du Cortex-M55 — un compteur de cycles hardware précis à la nanoseconde. À chaque cycle, le UART affiche :
+We measure CPU load and estimated power consumption in real time using the **DWT counter** (Data Watchpoint and Trace) of the Cortex-M55 — a hardware cycle counter accurate to the nanosecond. Every cycle, the UART prints :
 
 ```
 ==========================================
-[PWR] Periode cycle :  20043 ms
+[PWR] Cycle period  :  20043 ms
 [PWR] CPU load      :  0.3 %
 [PWR] h1_infer()    :  0.18 us  (144 cyc)
-[PWR] I estimee     :  30.4 mA
-[PWR] P estimee     :  100 mW  (0.100 W)
+[PWR] Est. current  :  30.4 mA
+[PWR] Est. power    :  100 mW  (0.100 W)
 ==========================================
 ```
 
-0.3% de charge CPU pour faire tourner l'IA. La carte dort 99.7% du temps.
+0.3% CPU load to run the AI. The board sleeps 99.7% of the time.
 
 ---
 
-## Comparaison Edge AI vs Cloud AI
+## Edge AI vs Cloud AI
 
-| Critère | STM32 H+1 — Edge | VPS J+1/J+2/J+3 — Cloud |
+| Criterion | STM32 H+1 — Edge | VPS J+1/J+2/J+3 — Cloud |
 |---|---|---|
 | Horizon | H+1 | J+1 / J+2 / J+3 |
-| Accuracy | **87.5%** | 80.9% (moy. J+1) |
-| Taille modèle | **~8 Ko** | ~120 Ko (Keras) |
-| Latence inférence | **< 1 ms** (local) | ~50 ms (réseau) |
-| Dépendance réseau | **Aucune** | Requiert connexion |
-| Consommation | **~100 mW** | Serveur 24/7 |
-| Mise à jour | Reflashing | Redémarrage Flask |
+| Accuracy | **87.5%** | 80.9% (J+1 avg.) |
+| Model size | **~8 KB** | ~120 KB (Keras) |
+| Inference latency | **< 1 ms** (local) | ~50 ms (network) |
+| Network dependency | **None** | Requires connection |
+| Power consumption | **~100 mW** | Server 24/7 |
+| Update | Reflashing | Flask restart |
 
-Notre approche **Edge-first** est cohérente avec une logique de sobriété numérique : l'inférence critique se passe localement, le réseau n'est utilisé que pour archiver et enrichir — pas pour faire tourner le modèle principal.
+Our **Edge-first** approach is consistent with digital sobriety : critical inference happens locally, the network is only used for archiving and enriching — not for running the main model.
 
 ---
 
-## Les chiffres qui comptent
+## Key numbers
 
-| Métrique | Valeur |
+| Metric | Value |
 |---|---|
-| Accuracy H+1 embarqué | **87.5%** |
-| Taille modèle embarqué | **~8 Ko** |
-| Inférence STM32 | **< 1 ms** |
-| Charge CPU IA | **< 1%** |
-| Observations d'entraînement | **43 821** |
+| H+1 embedded accuracy | **87.5%** |
+| Embedded model size | **~8 KB** |
+| STM32 inference time | **< 1 ms** |
+| AI CPU load | **< 1%** |
+| Training observations | **43,821** |
 | Features | **13** |
-| Cycle de mesure | **~20 s** |
-| Modèles cloud | **3** (J+1 · J+2 · J+3) |
+| Measurement cycle | **~20 s** |
+| Cloud models | **3** (J+1 · J+2 · J+3) |
 
 ---
 
-## Lancer le projet
+## Running the project
 
 ### Firmware
 
-Ouvrir `AtmosAI_ETRS606` dans STM32CubeIDE, configurer l'IP du VPS et la clé API dans `app_netxduo.c`, build, flash. La bannière UART confirme le démarrage.
+Open `AtmosAI_ETRS606` in STM32CubeIDE, set the VPS IP and API key in `app_netxduo.c`, build, flash. The UART banner confirms startup.
 
-### Backend VPS
+### VPS backend
 
 ```bash
 pip install flask tensorflow joblib scikit-learn numpy gunicorn
-export METEO_API_KEY="votre_cle"
+export METEO_API_KEY="your_key"
 gunicorn -w 2 -b 0.0.0.0:5000 app:app
 ```
 
 ### Dashboard
 
-Fichiers statiques servis directement par Caddy depuis `/usr/share/caddy/atmosai`. Modifier `API_BASE` dans `index.html` si besoin.
+Static files served directly by Caddy from `/usr/share/caddy/atmosai`. Update `API_BASE` in `index.html` if needed.
 
 ---
 
-## Équipe
+## Team
 
 | | |
 |---|---|
@@ -227,4 +227,4 @@ Fichiers statiques servis directement par Caddy depuis `/usr/share/caddy/atmosai
 
 ---
 
-*ETRS606 — IA Embarquée · Université Savoie Mont Blanc · 2026*
+*ETRS606 — Embedded AI · Université Savoie Mont Blanc · 2026*

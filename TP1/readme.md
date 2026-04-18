@@ -49,6 +49,6 @@ Finally, we will select the cost function (Loss Function) based on our specific 
 
 ## 👤 Auteur
 
-William / Franck / Mostapha — L3 Réseaux & Télécoms  
+William / Franck / Mostapha — L3 TRI // ESET  
 Module ETRS606 — IA Embarquée  
 Université Savoie Mont Blanc

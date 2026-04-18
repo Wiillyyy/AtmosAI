@@ -1,0 +1,14 @@
+../../../Middlewares/ST/AI/Npu/ll_aton/ll_aton_NN_interface.h:479:32:LL_Buffer_addr_base	24	static
+../../../Middlewares/ST/AI/Npu/ll_aton/ll_aton_NN_interface.h:489:32:LL_Buffer_addr_start	16	static
+../../../Middlewares/ST/AI/Npu/ll_aton/ll_aton_rt_user_api.h:289:46:LL_ATON_Output_Buffers_Info	16	static
+../../../Middlewares/ST/AI/Npu/ll_aton/ll_aton_rt_user_api.h:296:46:LL_ATON_Input_Buffers_Info	16	static
+C:/Users/will/Documents/Cube/Nx_TCP_Echo_Client/FSBL/NetXDuo/App/app_netxduo.c:105:9:hts221_write	40	static
+C:/Users/will/Documents/Cube/Nx_TCP_Echo_Client/FSBL/NetXDuo/App/app_netxduo.c:111:9:hts221_read	40	static
+C:/Users/will/Documents/Cube/Nx_TCP_Echo_Client/FSBL/NetXDuo/App/app_netxduo.c:118:9:lps22hh_write	40	static
+C:/Users/will/Documents/Cube/Nx_TCP_Echo_Client/FSBL/NetXDuo/App/app_netxduo.c:124:9:lps22hh_read	40	static
+C:/Users/will/Documents/Cube/Nx_TCP_Echo_Client/FSBL/NetXDuo/App/app_netxduo.c:138:6:MX_NetXDuo_Init	64	static
+C:/Users/will/Documents/Cube/Nx_TCP_Echo_Client/FSBL/NetXDuo/App/app_netxduo.c:318:13:ip_address_change_notify_callback	16	static
+C:/Users/will/Documents/Cube/Nx_TCP_Echo_Client/FSBL/NetXDuo/App/app_netxduo.c:340:13:nx_app_thread_entry	40	static
+C:/Users/will/Documents/Cube/Nx_TCP_Echo_Client/FSBL/NetXDuo/App/app_netxduo.c:418:13:App_Sensor_Thread_Entry	256	static
+C:/Users/will/Documents/Cube/Nx_TCP_Echo_Client/FSBL/NetXDuo/App/app_netxduo.c:620:13:App_TCP_Thread_Entry	104	static
+C:/Users/will/Documents/Cube/Nx_TCP_Echo_Client/FSBL/NetXDuo/App/app_netxduo.c:761:13:App_Link_Thread_Entry	40	static

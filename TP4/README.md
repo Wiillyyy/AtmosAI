@@ -128,3 +128,9 @@ Le modèle embarqué est plus précis sur l'horizon H+1 et totalement autonome. 
 | `app_netxduo.c` | Threads capteurs + TCP, inférence H+1, envoi VPS |
 | `h1_inference.c` | Ring buffer, calcul features, forward pass MLP |
 | `h1_weights.h` | Poids du réseau (généré par `extract_weights.py`) |
+
+## 👤 Auteur
+
+William / Franck / Mostapha — L3 TRI // ESET
+Module ETRS606 — IA Embarquée  
+Université Savoie Mont Blanc
