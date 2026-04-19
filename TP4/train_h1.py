@@ -191,6 +191,11 @@ model = keras.Sequential([
 ], name="meteo_h1_embedded")
 
 #Fonction d'activation : Relu, Avec 3 couches de neuronnes
+#Relu idéal pour les relations complexes avec plusieures variables
+#Dense = Fully connected, combinne toutes les infos
+#Couche 1 : signaux de base 
+#Couche 2 : interaction entre les signaux (humidité, pression...)
+#Couche 3 : Classification
 
 model.summary()
 
@@ -206,6 +211,7 @@ model.compile(
 )
 
 #optimizer : Adam , vitesse d'apprentissage : 0.001
+#Adam, optimizer intelligent et adaptatif
 #Fontion de coût : sparse_categorical_crossentropy
 #sparse_categorical_crossentropy idéal pour classification multi-classes
 
