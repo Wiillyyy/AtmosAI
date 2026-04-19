@@ -190,6 +190,8 @@ model = keras.Sequential([
     keras.layers.Dense(3,  activation="softmax"),
 ], name="meteo_h1_embedded")
 
+#Fonction d'activation : Relu, Avec 3 couches de neuronnes
+
 model.summary()
 
 classes     = np.unique(y_train)
@@ -203,6 +205,11 @@ model.compile(
     metrics   = ["accuracy"],
 )
 
+#optimizer : Adam , vitesse d'apprentissage : 0.001
+#Fontion de coût : sparse_categorical_crossentropy
+#sparse_categorical_crossentropy idéal pour classification multi-classes
+
+
 callbacks = [
     keras.callbacks.EarlyStopping(
         monitor="val_accuracy", patience=15,
@@ -214,6 +221,8 @@ callbacks = [
     ),
 ]
 
+#Earlystoping : stop si pas d’amélioration pendant 15 epochs
+
 history = model.fit(
     X_train, y_train,
     validation_split = 0.15,
@@ -223,6 +232,9 @@ history = model.fit(
     class_weight     = class_weight,
     verbose          = 1,
 )
+
+#Batch size = 256 exemples. On prend 5 ans de météo , 5 x 365 x 24 = 43 800 
+# 1 epoch = analyse des 43 800 données en groupe de 256
 
 # ---------------------------------------------------------------------------
 # 7. Évaluation
