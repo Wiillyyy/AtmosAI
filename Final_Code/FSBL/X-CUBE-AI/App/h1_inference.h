@@ -32,7 +32,7 @@ void h1_init(void);
 
 /**
  * Pousse une nouvelle mesure capteur dans le ring buffer.
- * À appeler à chaque cycle de mesure (~20 s).
+ * À appeler à chaque cycle de mesure (~5 s).
  *
  * @param temp_c   Température en °C
  * @param rhum_pct Humidité relative en %

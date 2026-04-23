@@ -14,10 +14,10 @@
 /* ============================================================ */
 
 /*
- * 560 entrees x ~20 s = ~3h7min.
+ * 2240 entrees x ~5 s = ~3h06min.
  * Suffisant pour calculer les deltas sur 1h et 3h.
  */
-#define H1_BUF_LEN   560
+#define H1_BUF_LEN   2240
 
 typedef struct {
     float    temp;

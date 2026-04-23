@@ -9,7 +9,7 @@
 ## Vue d'ensemble
 
 Station météo embarquée sur carte STM32N657X0-DK (Cortex-M55, 600 MHz, NPU ATON intégré).  
-Mesure température, humidité et pression toutes les ~20 s, prédit la météo à H+1 (Clair / Pluie / Brouillard) via un réseau de neurones MLP embarqué, et remonte les données vers un serveur TCP distant.
+Mesure température, humidité et pression toutes les ~5 s, prédit la météo à H+1 (Clair / Pluie / Brouillard) via un réseau de neurones MLP embarqué, et remonte les données vers un serveur TCP distant.
 
 ---
 
@@ -28,7 +28,7 @@ Mesure température, humidité et pression toutes les ~20 s, prédit la météo 
 
 ```
 ThreadX (RTOS sécurisé TrustZone)
-├── Task capteurs     — acquisition HTS221 + LPS22HH toutes les ~20 s
+├── Task capteurs     — acquisition HTS221 + LPS22HH toutes les ~5 s
 ├── Task NetXDuo      — DHCP + TCP client (envoi données serveur)
 └── Task inference    — prédiction météo H+1 (MLP embarqué)
 
@@ -70,7 +70,7 @@ Les poids sont extraits du modèle entraîné (`extract_weights.py`) et compilé
 
 ### Ring buffer temporel
 
-560 échantillons × ~20 s ≈ 3h07min d'historique — nécessaire pour calculer les deltas à 1h et 3h.  
+2240 échantillons × ~5 s ≈ 3h06min d'historique — nécessaire pour calculer les deltas à 1h et 3h.  
 Les deltas sont indisponibles au démarrage (affichage du temps restant en console).
 
 ---
