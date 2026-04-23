@@ -1,0 +1,6 @@
+../../../FSBL/Core/Src/syscalls.c:8:5:_write	2
+../../../FSBL/Core/Src/syscalls.c:16:5:_read	1
+../../../FSBL/Core/Src/syscalls.c:17:5:_close	1
+../../../FSBL/Core/Src/syscalls.c:18:5:_fstat	1
+../../../FSBL/Core/Src/syscalls.c:19:5:_isatty	1
+../../../FSBL/Core/Src/syscalls.c:20:5:_lseek	1

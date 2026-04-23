@@ -1,0 +1,16 @@
+../../../Middlewares/ST/AI/Npu/ll_aton/ecloader.c:109:17:ec_get_blob_ptr	3
+../../../Middlewares/ST/AI/Npu/ll_aton/ecloader.c:167:6:ec_copy_blob	8
+../../../Middlewares/ST/AI/Npu/ll_aton/ecloader.c:256:6:ec_copy_reloc_table	11
+../../../Middlewares/ST/AI/Npu/ll_aton/ecloader.c:349:20:ec_get_reloc_table_ptr	3
+../../../Middlewares/ST/AI/Npu/ll_aton/ecloader.c:384:14:ec_get_num_relocs	2
+../../../Middlewares/ST/AI/Npu/ll_aton/ecloader.c:406:13:ec_get_reloc_id	3
+../../../Middlewares/ST/AI/Npu/ll_aton/ecloader.c:446:6:ec_reloc	6
+../../../Middlewares/ST/AI/Npu/ll_aton/ecloader.c:511:6:ec_reloc_by_id	7
+../../../Middlewares/ST/AI/Npu/ll_aton/ecloader.c:593:6:ec_copy_patch_table	10
+../../../Middlewares/ST/AI/Npu/ll_aton/ecloader.c:684:20:ec_get_patch_table_ptr	3
+../../../Middlewares/ST/AI/Npu/ll_aton/ecloader.c:721:14:ec_get_num_patches	2
+../../../Middlewares/ST/AI/Npu/ll_aton/ecloader.c:743:13:ec_get_patch_id	3
+../../../Middlewares/ST/AI/Npu/ll_aton/ecloader.c:778:9:ec_get_patch_shr	3
+../../../Middlewares/ST/AI/Npu/ll_aton/ecloader.c:809:10:ec_get_patch_mask	3
+../../../Middlewares/ST/AI/Npu/ll_aton/ecloader.c:844:6:ec_patch	6
+../../../Middlewares/ST/AI/Npu/ll_aton/ecloader.c:914:6:ec_patch_by_id	8

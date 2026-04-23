@@ -1,0 +1,16 @@
+../../../Middlewares/ST/AI/Npu/ll_aton/ll_aton_caches_interface.h:54:22:LL_ATON_Cache_MCU_Clean_Range	16	static
+../../../Middlewares/ST/AI/Npu/ll_aton/ll_aton_caches_interface.h:73:22:LL_ATON_Cache_MCU_Invalidate_Range	16	static
+../../../FSBL/X-CUBE-AI/App/network.c:96:36:LL_ATON_WeightEncryption_Info_network	4	static
+../../../FSBL/X-CUBE-AI/App/network.c:105:36:LL_ATON_BlobEncryption_Info_network	4	static
+../../../FSBL/X-CUBE-AI/App/network.c:114:26:LL_ATON_Set_User_Input_Buffer_network	24	static
+../../../FSBL/X-CUBE-AI/App/network.c:125:7:LL_ATON_Get_User_Input_Buffer_network	16	static
+../../../FSBL/X-CUBE-AI/App/network.c:134:26:LL_ATON_Set_User_Output_Buffer_network	24	static
+../../../FSBL/X-CUBE-AI/App/network.c:145:7:LL_ATON_Get_User_Output_Buffer_network	16	static
+../../../FSBL/X-CUBE-AI/App/network_ecblobs.h:188:6:LL_ATON_EC_Network_Init_network	4	static
+../../../FSBL/X-CUBE-AI/App/network_ecblobs.h:194:6:LL_ATON_EC_Inference_Init_network	4	static
+../../../FSBL/X-CUBE-AI/App/network.c:161:13:_ec_blob_cache_start_func_1	16	static
+../../../FSBL/X-CUBE-AI/App/network.c:177:13:LL_ATON_End_EpochBlock_6	344	static
+../../../FSBL/X-CUBE-AI/App/network.c:268:36:LL_ATON_EpochBlockItems_network	4	static
+../../../FSBL/X-CUBE-AI/App/network.c:307:30:LL_ATON_Input_Buffers_Info_network	4	static
+../../../FSBL/X-CUBE-AI/App/network.c:548:30:LL_ATON_Output_Buffers_Info_network	4	static
+../../../FSBL/X-CUBE-AI/App/network.c:587:30:LL_ATON_Internal_Buffers_Info_network	4	static
