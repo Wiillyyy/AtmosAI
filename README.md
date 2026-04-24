@@ -1,184 +1,292 @@
-# AtmosAI — Embedded Weather Station with Edge & Cloud AI
+# AtmosAI — STM32 Weather Station with Edge AI and VPS Dashboard
 
-> **Module ETRS606 — Embedded AI · Université Savoie Mont Blanc**  
+> **Module ETRS606 — Embedded AI · Universite Savoie Mont Blanc**  
 > William Z. · Franck G. · Mostapha K.
 
 ---
 
 ## What we built
 
-We designed a complete end-to-end embedded weather station — from the physical sensor all the way to a website hosted on our own server, including a neural network running **directly on our microcontroller**, no cloud, no internet, in under a millisecond.
+AtmosAI is an end-to-end embedded weather station built around an **STM32 NUCLEO-N657X0** board and a self-hosted VPS dashboard.
 
-Our STM32 board reads temperature, humidity and pressure every 20 seconds. It computes 13 features in real time, runs a full MLP inference locally, and sends everything — measurements + prediction — to our Flask API hosted on a VPS. The website displays it all live, auto-refreshes, and we can even send commands to the board from the browser.
+The board reads local sensors, runs an embedded **H+1 weather classifier**, sends live telemetry to a Flask API over Ethernet, and also receives commands back from the server. The web dashboard displays live measurements, predictions, historical charts, board telemetry, IMU values, and a 3D board view driven by the accelerometer.
 
-We didn't use ThingSpeak. We didn't use MATLAB. We did everything ourselves.
+We did not use ThingSpeak or MATLAB. The full chain is ours: STM32 firmware, HTTP protocol, Flask API, SQLite storage, static dashboard, and admin page.
 
 ---
 
 ## Architecture at a glance
 
-```
-┌──────────────────────────────────────────────────────┐
-│                   STM32N657X0 BOARD                  │
-│                                                      │
-│  HTS221 (temp/hum) + LPS22HH (pressure)  ← I2C      │
-│              ↓                                       │
-│   Ring buffer 560 samples (~3h)                      │
-│              ↓                                       │
-│   13 features computed in real time                  │
-│              ↓                                       │
-│   h1_infer() — MLP C float32 — < 1ms                 │
-│   Output: Clear / Rain / Snow + confidence           │
-│              ↓                                       │
-│   HTTP POST every ~20s via Ethernet                  │
-└──────────────────────┬───────────────────────────────┘
-                       ↓
-┌──────────────────────────────────────────────────────┐
-│              VPS — Flask API + SQLite                │
-│                                                      │
-│   SQLite storage → Keras inference J+1/J+2/J+3      │
-│   Public routes + admin routes protected by API key  │
-└──────────────────────┬───────────────────────────────┘
-                       ↓
-┌──────────────────────────────────────────────────────┐
-│            Web Dashboard — index.html                │
-│                                                      │
-│   Live metrics · Sparklines · Predictions            │
-│   Live STM32 features · History · Comparison         │
-└──────────────────────────────────────────────────────┘
+```text
++------------------------------------------------------+
+|                 STM32 NUCLEO-N657X0                  |
+|                                                      |
+|  X-NUCLEO-IKS01A3 shield over I2C                    |
+|  - HTS221  : temperature + humidity                  |
+|  - LPS22HH : pressure                                |
+|  - LSM6DSO : accelerometer + gyroscope               |
+|                                                      |
+|  Sensor thread (~5 s cycle)                          |
+|      -> reads sensors                                |
+|      -> updates telemetry                            |
+|      -> pushes T/RH/P into H+1 ring buffer           |
+|      -> runs h1_infer() locally on CPU               |
+|      -> updates LEDs                                 |
+|                                                      |
+|  TCP thread                                          |
+|      -> DNS resolve atmosai.willydev.xyz via 8.8.8.8 |
+|      -> fallback to fixed VPS IP if DNS fails        |
+|      -> HTTP POST /api/data                          |
+|      -> HTTP GET  /api/command                       |
++-------------------------+----------------------------+
+                          |
+                          v
++------------------------------------------------------+
+|                 VPS — Flask API + SQLite             |
+|                                                      |
+|  Stores measurements and telemetry                   |
+|  Serves dashboard data                               |
+|  Stores admin command for the board                  |
+|  Runs optional longer-range forecast endpoints       |
++-------------------------+----------------------------+
+                          |
+                          v
++------------------------------------------------------+
+|                  Web Dashboard                       |
+|                                                      |
+|  index.html  : main station dashboard                |
+|  index2.html : detailed board telemetry + 3D view    |
+|  admin.html  : admin commands and database tools     |
++------------------------------------------------------+
 ```
 
 ---
 
 ## Hardware
 
-We use a **NUCLEO-N657X0** board (STM32N657X0 — Cortex-M55 at 800 MHz) with the **X-NUCLEO-IKS01A3** shield. Sensors communicate over I2C :
-- **HTS221** for temperature and humidity (±0.5°C / ±3.5% RH)
-- **LPS22HH** for atmospheric pressure (±0.1 hPa)
+We use a **NUCLEO-N657X0** board based on the **STM32N657X0** Cortex-M55 MCU, with the **X-NUCLEO-IKS01A3** sensor shield.
 
-The board runs **Azure RTOS ThreadX** with two independent threads : a sensor thread that reads, computes and infers, and a TCP thread that posts results to the VPS.
+Sensors used over I2C:
+
+| Sensor | Role | Used for |
+|---|---|---|
+| **HTS221** | Temperature + humidity | Live weather values and H+1 model input |
+| **LPS22HH** | Atmospheric pressure | Live pressure and pressure trend features |
+| **LSM6DSO** | Accelerometer + gyroscope | IMU telemetry and dashboard 3D board motion |
+
+The firmware runs on **Azure RTOS ThreadX**. The application is split into threads so the sensor cycle, network communication, and command handling stay separated.
 
 ---
 
-## The embedded model — H+1
+## Embedded H+1 model
 
-This is the part we're most proud of.
+The embedded model predicts the weather class one hour ahead from local sensor data.
 
-We trained an MLP in Python/TensorFlow on **43,821 hours** of historical weather data from Aix-les-Bains (Open-Meteo, 2019–2023). We exported the weights to C float32 via X-CUBE-AI. The network runs entirely on the board — no network dependency, no cloud latency, no NPU.
+Architecture:
 
+```text
+Input: 13 features
+      |
+Dense 13 -> 32, ReLU
+      |
+Dense 32 -> 32, ReLU
+      |
+Dense 32 -> 16, ReLU
+      |
+Dense 16 -> 3, Softmax
+      |
+Clair · Pluie · Brouillard
 ```
-Input (13 features)
-      ↓
-Dense(32, ReLU)   ← BN fused into weights
-      ↓
-Dense(32, ReLU)
-      ↓
-Dense(16, ReLU)
-      ↓
-Dense(3, Softmax)
-      ↓
-Clear · Rain · Snow
-```
 
-**87.5% accuracy. ~8 KB. Inference in < 1 ms. CPU load < 1%.**
+Current model characteristics:
+
+| Metric | Value |
+|---|---|
+| Accuracy | **87.5%** |
+| Input features | **13** |
+| Output classes | **Clair / Pluie / Brouillard** |
+| Execution | **local STM32 CPU fallback** |
+| Typical measured inference time | **~26 ms** |
+| Typical CPU load | **< 1%** |
+
+The model is executed locally on the STM32. The VPS is used for storage, visualization and supervision, not for the H+1 embedded inference.
 
 ### The 13 features
 
-What makes our model robust is that it doesn't just look at raw values. It receives **dynamically computed features** from a ring buffer of 560 samples (~3h of history) kept in RAM :
+The model does not only use raw weather values. It also uses trend and time features computed from a RAM ring buffer.
 
 | # | Feature | Source |
 |---|---|---|
-| 1–3 | temp, hum, pres | Direct sensors |
-| 4–5 | ΔT 1h, ΔT 3h | Ring buffer |
-| 6–7 | ΔP 1h, ΔP 3h | Ring buffer |
-| 8 | ΔH 1h | Ring buffer |
-| 9–10 | hour_sin, hour_cos | RTC (cyclic encoding) |
-| 11–12 | month_sin, month_cos | RTC (cyclic encoding) |
-| 13 | T − dew point | Embedded Magnus formula |
+| 1-3 | temperature, humidity, pressure | Direct sensors |
+| 4-5 | delta temperature 1h / 3h | Ring buffer |
+| 6-7 | delta pressure 1h / 3h | Ring buffer |
+| 8 | delta humidity 1h | Ring buffer |
+| 9-10 | hour sin / hour cos | Time synchronized from VPS |
+| 11-12 | month sin / month cos | Time synchronized from VPS |
+| 13 | temperature - dew point | Embedded Magnus formula |
 
-Deltas capture the **trend** (pressure drop → likely rain). The sin/cos encoding of hour and month avoids the "11pm is far from midnight" artefact — the model knows time is continuous. The dew point is directly predictive of condensation and precipitation.
-
-### Why the NPU is not used
-
-We tried. X-CUBE-AI generated the code with the LL_ATON runtime. On the first call, BusFault — immediate crash. After analysing the CFSR register and the faulting address, we identified the cause : the ATON input buffer points to `0x342e0000` (AXISRAM5/npuRAM5), a region wired **exclusively to the NPU AXI bus**. The CPU has no access path to this memory.
-
-Anyway, X-CUBE-AI had compiled all blocks as `EpochBlock_Flags_pure_sw` — the hardware NPU wasn't involved at all, our model is too small to justify it. Our `h1_infer()` does exactly the same computations, same weights, same results — but in CPU-accessible SRAM.
+The trend features are important because a falling pressure or rising humidity is often more meaningful than an isolated value.
 
 ---
 
-## The VPS backend
+## NPU status
 
-We refused to depend on ThingSpeak. We deployed our own stack :
+The project contains an integration attempt for the STM32N6 NPU runtime:
 
-- **Flask** (Python) served by **Gunicorn**
-- **SQLite** for measurement storage
-- **Caddy** to serve static files
-- **systemd** for resilience (automatic restart)
+- NPU clock enabled during startup.
+- ATON/STAI runtime initialized.
+- STAI network initialization attempted.
+- RISAF access configuration was investigated and tested.
 
-Our API exposes public routes (data reading, forecasts) and admin routes protected by key (`purge, clear database, send command to board`).
+However, `stai_network_run()` is not used in the final stable demo because the runtime consistently triggered an **Epoch Controller EC_IRQ = 0x8** bus error on this project setup. The stable final version keeps the NPU initialization path visible, then runs the same H+1 MLP on the CPU fallback to avoid crashing during the demonstration.
 
-### Cloud models J+1 / J+2 / J+3
-
-Alongside the embedded H+1, we trained **3 independent Keras models** on the VPS for longer-range forecasts, using the same 13 features (recomputed from the SQLite history) :
-
-| Model | Horizon | Balanced Accuracy |
-|---|---|---|
-| J+1 | +24h | 64.3% |
-| J+2 | +48h | 61.2% |
-| J+3 | +72h | 54.4% |
-
-The degradation with horizon is expected — predicting at 72h with only local sensors and no NWP data is a fundamentally hard problem.
+This is an intentional stability choice: the embedded prediction remains local, deterministic and demonstrable.
 
 ---
 
-## The web dashboard
+## Network communication
 
-A vanilla HTML/CSS/JS file, no framework. Switchable dark/light theme. Auto-refresh every 15 seconds.
+The STM32 communicates with the VPS using raw HTTP over TCP through NetXDuo.
 
-**What we display on the dashboard :**
-- Live values in large (temperature cyan, humidity amber, pressure green)
-- H+1 prediction from the board : class + animated confidence bar + floating emoji
-- **Live STM32 features** : 10 values computed in JS from history (deltas, dew point, cyclical) — colour-coded green/red by sign, exactly the same formulas as in the embedded C
-- 3 Canvas 2D sparklines (bézier curves with gradient fill)
-- Latest measurements table
-- History tab with interactive Chart.js charts
-- AI Model tab with full technical details + Edge vs Cloud comparison table
+### POST — board to VPS
 
-**Admin page** (`admin.html`) : database management, purge, downlink commands to the board (including a strobe light mode for the demo).
+Every completed sensor cycle, the board sends:
+
+```http
+POST /api/data HTTP/1.1
+Host: atmosai.willydev.xyz
+Content-Type: application/json
+X-API-Key: atmosai_w1lly_2026
+Connection: close
+```
+
+The JSON contains:
+
+- temperature, humidity, pressure
+- H+1 prediction and confidence
+- IMU status, accelerometer and gyroscope values
+- CPU load, inference time, estimated power, cycle period
+- uptime and POST status counters
+
+### GET — VPS to board
+
+After the POST, the board performs:
+
+```http
+GET /api/command HTTP/1.1
+Host: atmosai.willydev.xyz
+X-API-Key: atmosai_w1lly_2026
+Connection: close
+```
+
+This is used for the downlink part of the project. For example, the admin page can request the **dance mode**, and the board executes it on the next cycle.
+
+### DNS with fallback
+
+At startup, the TCP thread tries to resolve:
+
+```text
+atmosai.willydev.xyz
+```
+
+using Google DNS:
+
+```text
+8.8.8.8
+```
+
+If DNS fails, times out, or is blocked by the network, the firmware automatically falls back to the fixed VPS IP address. This keeps the demo robust on unknown networks.
+
+---
+
+## VPS backend
+
+The VPS hosts the server side of the project:
+
+- **Flask** API
+- **SQLite** database
+- static HTML/CSS/JS dashboard files
+- admin endpoints protected by API key
+- command storage for board downlink
+
+The database stores not only weather values, but also board telemetry such as CPU load, inference time, cycle period, power estimate, IMU values and POST status. This avoids stale in-memory telemetry when the server is restarted or when multiple workers are used.
+
+Main API behavior:
+
+| Route | Role |
+|---|---|
+| `POST /api/data` | Receives STM32 measurements and telemetry |
+| `GET /api/data` | Serves latest measurements to the dashboard |
+| `GET /api/command` | Lets the board fetch the pending admin command |
+| Admin routes | Database reset, purge and command control |
+
+---
+
+## Web dashboard
+
+The dashboard is built in vanilla HTML/CSS/JS.
+
+Current pages:
+
+| File | Role |
+|---|---|
+| `index.html` | Main station dashboard |
+| `index2.html` | Detailed board page with telemetry and 3D board view |
+| `admin.html` | Admin page for commands and database control |
+
+Main features:
+
+- dark/light theme persisted across pages
+- live temperature, humidity and pressure
+- H+1 prediction with confidence
+- historical charts with Chart.js
+- pressure displayed on its own chart axis
+- live CPU, inference time, cycle period and power estimate
+- IMU values from the LSM6DSO
+- pseudo-3D board view driven by accelerometer data
+- command status and real-time connection state
+
+The dashboard refreshes live data approximately every **5 seconds**, matching the current STM32 measurement cycle.
+
+---
+
+## Admin page and dance mode
+
+The admin page can send commands from the VPS to the STM32.
+
+The most visible command is **dance mode**:
+
+- the admin page stores a pending `dance` command
+- the board fetches it through `GET /api/command`
+- the normal sensor/inference cycle pauses
+- LEDs blink for about **20 seconds**
+- the console prints a progress bar
+- after the dance, the board resumes normal measurements and POSTs
+
+This demonstrates bidirectional communication:
+
+```text
+STM32 -> VPS : POST measurements
+VPS   -> STM32 : GET command response
+```
 
 ---
 
 ## Embedded performance measurement
 
-We measure CPU load and estimated power consumption in real time using the **DWT counter** (Data Watchpoint and Trace) of the Cortex-M55 — a hardware cycle counter accurate to the nanosecond. Every cycle, the UART prints :
+The firmware uses the Cortex-M55 **DWT cycle counter** to measure active CPU work and H+1 inference time.
 
+Example console output:
+
+```text
+[PWR] Periode cycle : 5060 ms
+[PWR] CPU load      : 0.9 %
+[PWR] h1_infer()    : 26513.47 us  (15908083 cyc)
+[PWR] I estimee     : 31.1 mA
+[PWR] P estimee     : 103 mW  (0.103 W)
 ```
-==========================================
-[PWR] Cycle period  :  20043 ms
-[PWR] CPU load      :  0.3 %
-[PWR] h1_infer()    :  0.18 us  (144 cyc)
-[PWR] Est. current  :  30.4 mA
-[PWR] Est. power    :  100 mW  (0.100 W)
-==========================================
-```
 
-0.3% CPU load to run the AI. The board sleeps 99.7% of the time.
-
----
-
-## Edge AI vs Cloud AI
-
-| Criterion | STM32 H+1 — Edge | VPS J+1/J+2/J+3 — Cloud |
-|---|---|---|
-| Horizon | H+1 | J+1 / J+2 / J+3 |
-| Accuracy | **87.5%** | 80.9% (J+1 avg.) |
-| Model size | **~8 KB** | ~120 KB (Keras) |
-| Inference latency | **< 1 ms** (local) | ~50 ms (network) |
-| Network dependency | **None** | Requires connection |
-| Power consumption | **~100 mW** | Server 24/7 |
-| Update | Reflashing | Flask restart |
-
-Our **Edge-first** approach is consistent with digital sobriety : critical inference happens locally, the network is only used for archiving and enriching — not for running the main model.
+The goal is not only to predict weather, but also to show that the embedded workload is measurable and lightweight.
 
 ---
 
@@ -186,14 +294,19 @@ Our **Edge-first** approach is consistent with digital sobriety : critical infer
 
 | Metric | Value |
 |---|---|
+| Board | NUCLEO-N657X0 |
+| Shield | X-NUCLEO-IKS01A3 |
+| Weather sensors | HTS221 + LPS22HH |
+| IMU sensor | LSM6DSO |
 | H+1 embedded accuracy | **87.5%** |
-| Embedded model size | **~8 KB** |
-| STM32 inference time | **< 1 ms** |
-| AI CPU load | **< 1%** |
-| Training observations | **43,821** |
+| H+1 classes | Clair / Pluie / Brouillard |
 | Features | **13** |
-| Measurement cycle | **~20 s** |
-| Cloud models | **3** (J+1 · J+2 · J+3) |
+| Measurement cycle | **~5 s** |
+| Dance mode duration | **~20 s** |
+| Network protocol | HTTP over TCP |
+| DNS | 8.8.8.8 with fixed-IP fallback |
+| Database | SQLite |
+| Dashboard refresh | **~5 s** |
 
 ---
 
@@ -201,19 +314,42 @@ Our **Edge-first** approach is consistent with digital sobriety : critical infer
 
 ### Firmware
 
-Open `AtmosAI_ETRS606` in STM32CubeIDE, set the VPS IP and API key in `app_netxduo.c`, build, flash. The UART banner confirms startup.
+Open the project in STM32CubeIDE, build and flash the FSBL project.
+
+Important firmware constants are in:
+
+```text
+FSBL/NetXDuo/App/app_netxduo.c
+```
+
+This file contains:
+
+- VPS fallback IP
+- VPS port
+- HTTP POST and GET formatting
+- API key header
+- DNS resolution logic
+- sensor thread and TCP thread logic
 
 ### VPS backend
 
-```bash
-pip install flask tensorflow joblib scikit-learn numpy gunicorn
-export METEO_API_KEY="your_key"
-gunicorn -w 2 -b 0.0.0.0:5000 app:app
+Run the Flask API on the VPS and expose the configured port. The STM32 currently targets the API through:
+
+```text
+http://atmosai.willydev.xyz:5080
 ```
+
+The API key must match the value used by the firmware.
 
 ### Dashboard
 
-Static files served directly by Caddy from `/usr/share/caddy/atmosai`. Update `API_BASE` in `index.html` if needed.
+Serve the static files from the VPS web directory:
+
+```text
+index.html
+index2.html
+admin.html
+```
 
 ---
 
@@ -221,10 +357,10 @@ Static files served directly by Caddy from `/usr/share/caddy/atmosai`. Update `A
 
 | | |
 |---|---|
-| **William Z.** | The Sovereign Lord of the TRI |
-| **Franck G.** | The Stoic Sentinel of the CPU Debugger |
-| **Mostapha K.** | The Holy Exorcist of the ESET UART Console |
+| **William Z.** | Firmware, integration, dashboard, debugging |
+| **Franck G.** | Project support and validation |
+| **Mostapha K.** | Project support and validation |
 
 ---
 
-*ETRS606 — Embedded AI · Université Savoie Mont Blanc · 2026*
+*ETRS606 — Embedded AI · Universite Savoie Mont Blanc · 2026*
