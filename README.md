@@ -357,9 +357,9 @@ admin.html
 
 | | |
 |---|---|
-| **William Z.** | Firmware, integration, dashboard, debugging |
-| **Franck G.** | Project support and validation |
-| **Mostapha K.** | Project support and validation |
+| **William Z.** | TRI |
+| **Franck G.** | TRI |
+| **Mostapha K.** | ESET |
 
 ---
 
