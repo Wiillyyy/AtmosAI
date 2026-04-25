@@ -1,11 +1,11 @@
 ../../../Middlewares/ST/AI/Npu/ll_aton/ll_aton.h:491:26:LL_Streng_len	16	static
 ../../../Middlewares/ST/AI/Npu/ll_aton/ll_aton_caches_interface.h:94:22:LL_ATON_Cache_MCU_Clean_Invalidate_Range	16	static
-../../../Middlewares/ST/AI/Npu/ll_aton/ll_aton.c:61:20:ll_aton_static_checks	16	static
+../../../Middlewares/ST/AI/Npu/ll_aton/ll_aton.c:61:20:ll_aton_static_checks	4	static
 ../../../Middlewares/ST/AI/Npu/ll_aton/ll_aton.c:127:16:LL_Address_Physical2Virtual	16	static
 ../../../Middlewares/ST/AI/Npu/ll_aton/ll_aton.c:132:16:LL_Address_Virtual2Physical	16	static
 ../../../Middlewares/ST/AI/Npu/ll_aton/ll_aton.c:142:18:startWatchdog	16	static
 ../../../Middlewares/ST/AI/Npu/ll_aton/ll_aton.c:153:18:checkWatchdog	4	static
-../../../Middlewares/ST/AI/Npu/ll_aton/ll_aton.c:166:5:LL_ATON_Init	56	static
+../../../Middlewares/ST/AI/Npu/ll_aton/ll_aton.c:166:5:LL_ATON_Init	16	static
 ../../../Middlewares/ST/AI/Npu/ll_aton/ll_aton.c:268:5:LL_ATON_DeInit	16	static
 ../../../Middlewares/ST/AI/Npu/ll_aton/ll_aton.c:300:5:LL_ATON_EnableUnits_Init	56	static
 ../../../Middlewares/ST/AI/Npu/ll_aton/ll_aton.c:380:5:LL_ATON_DisableUnits_Init	32	static
@@ -14,8 +14,8 @@
 ../../../Middlewares/ST/AI/Npu/ll_aton/ll_aton.c:781:5:LL_Streng_ExtSyncInit	24	static
 ../../../Middlewares/ST/AI/Npu/ll_aton/ll_aton.c:811:5:LL_TriggerHigh	16	static
 ../../../Middlewares/ST/AI/Npu/ll_aton/ll_aton.c:832:5:LL_TriggerLow	16	static
-../../../Middlewares/ST/AI/Npu/ll_aton/ll_aton.c:846:14:__atonn_getSrcPortID	24	static
-../../../Middlewares/ST/AI/Npu/ll_aton/ll_aton.c:915:14:__atonn_getDstPortID	24	static
+../../../Middlewares/ST/AI/Npu/ll_aton/ll_aton.c:846:14:__atonn_getSrcPortID	16	static
+../../../Middlewares/ST/AI/Npu/ll_aton/ll_aton.c:915:14:__atonn_getDstPortID	16	static
 ../../../Middlewares/ST/AI/Npu/ll_aton/ll_aton.c:990:5:LL_Switch_Init_NoReset	64	static
 ../../../Middlewares/ST/AI/Npu/ll_aton/ll_aton.c:1040:5:LL_Switch_Init	16	static
 ../../../Middlewares/ST/AI/Npu/ll_aton/ll_aton.c:1055:5:LL_Switch_Deinit	32	static

@@ -164,6 +164,11 @@ int main(void)
   HAL_UART_Transmit(&huart1, (uint8_t*)"[DBG] ISOLATION OK\r\n", 20, 1000);
   /* USER CODE BEGIN 2 */
   IWDG_KR_S = 0xAAAAUL;
+  /*
+   * Le projet lance uniquement l'horloge du bloc NPU ici.
+   * L'initialisation runtime ATON/STAI est faite plus tard dans app_netxduo.c,
+   * une fois que ThreadX, les capteurs et la pile reseau sont en place.
+   */
   __HAL_RCC_NPU_CLK_ENABLE();
   HAL_UART_Transmit(&huart1, (uint8_t*)"[DBG] NPU CLK OK\r\n", 18, 1000);
   printf("\r\n");
@@ -178,7 +183,11 @@ int main(void)
 
   MX_ThreadX_Init();
 
-  /* We should never get here as control is now taken by the scheduler */
+  /*
+   * A partir d'ici, le scheduler Azure RTOS/ThreadX prend la main.
+   * La logique applicative ne tourne donc pas dans while(1), mais dans les
+   * threads declares dans app_netxduo.c : reseau, capteurs, POST/GET VPS.
+   */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */

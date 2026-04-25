@@ -1,5 +1,5 @@
 Application/User/Core/stm32n6xx_hal_timebase_tim.o: \
- C:/ST/AtmosAI_ETRS606_user/FSBL/Core/Src/stm32n6xx_hal_timebase_tim.c \
+ C:/Users/William/Documents/GitHub/AtmosAI_ETRS606/FSBL/Core/Src/stm32n6xx_hal_timebase_tim.c \
  ../../../Drivers/STM32N6xx_HAL_Driver/Inc/stm32n6xx_hal.h \
  ../../../FSBL/Core/Inc/stm32n6xx_hal_conf.h \
  ../../../Drivers/STM32N6xx_HAL_Driver/Inc/stm32n6xx_hal_rcc.h \

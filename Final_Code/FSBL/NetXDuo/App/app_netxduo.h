@@ -57,7 +57,7 @@ extern "C" {
 /* Exported macro ------------------------------------------------------------*/
 /* USER CODE BEGIN EM */
 #define PRINT_IP_ADDRESS(addr)             do { \
-                                                printf("STM32 %s: %lu.%lu.%lu.%lu \n", #addr, \
+                                                printf("STM32 %s: %lu.%lu.%lu.%lu\r\n", #addr, \
                                                 (addr >> 24) & 0xff, \
                                                 (addr >> 16) & 0xff, \
                                                 (addr >> 8) & 0xff, \

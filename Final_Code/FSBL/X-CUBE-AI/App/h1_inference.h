@@ -32,7 +32,7 @@ void h1_init(void);
 
 /**
  * Pousse une nouvelle mesure capteur dans le ring buffer.
- * À appeler à chaque cycle de mesure (~5 s).
+ * À appeler à chaque cycle de mesure (~20 s).
  *
  * @param temp_c   Température en °C
  * @param rhum_pct Humidité relative en %
@@ -52,7 +52,8 @@ void h1_set_time(int hour, int month);
 
 /**
  * Lance l'inférence sur la dernière mesure poussée.
- * Construit les 13 features, normalise, forward pass MLP.
+ * Construit les 13 features, normalise, puis execute le forward pass MLP :
+ * Dense 13->32, Dense 32->32, Dense 32->16, Dense 16->3, puis softmax.
  *
  * @return H1Result.ready = 0 si pas assez d'historique (< 3h de données),
  *                          1 sinon avec label + confidence remplis.

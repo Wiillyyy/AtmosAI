@@ -1,6 +1,6 @@
 Application/User/NetXDuo/App/app_netxduo.o: \
- C:/ST/AtmosAI_ETRS606_user/FSBL/NetXDuo/App/app_netxduo.c \
- C:/ST/AtmosAI_ETRS606_user/FSBL/NetXDuo/App/app_netxduo.h \
+ C:/Users/William/Documents/GitHub/AtmosAI_ETRS606/FSBL/NetXDuo/App/app_netxduo.c \
+ C:/Users/William/Documents/GitHub/AtmosAI_ETRS606/FSBL/NetXDuo/App/app_netxduo.h \
  ../../../Middlewares/ST/netxduo/common/inc/nx_api.h \
  ../../../Middlewares/ST/threadx/ports/cortex_m55/gnu/inc/tx_port.h \
  ../../../FSBL/Core/Inc/tx_user.h \
@@ -52,10 +52,11 @@ Application/User/NetXDuo/App/app_netxduo.o: \
  ../../../Middlewares/ST/netxduo/common/inc/nx_udp.h \
  ../../../Middlewares/ST/netxduo/common/inc/nx_ip.h \
  ../../../Middlewares/ST/netxduo/common/inc/nx_ipv4.h \
- C:/ST/AtmosAI_ETRS606_user/STM32CubeIDE/FSBL/Drivers/STMems/hts221_reg.h \
- C:/ST/AtmosAI_ETRS606_user/STM32CubeIDE/FSBL/Drivers/STMems/lps22hh_reg.h \
+ C:/Users/William/Documents/GitHub/AtmosAI_ETRS606/STM32CubeIDE/FSBL/Drivers/STMems/hts221_reg.h \
+ C:/Users/William/Documents/GitHub/AtmosAI_ETRS606/STM32CubeIDE/FSBL/Drivers/STMems/lps22hh_reg.h \
+ C:/Users/William/Documents/GitHub/AtmosAI_ETRS606/STM32CubeIDE/FSBL/Drivers/STMems/lsm6dso_reg.h \
  ../../../FSBL/X-CUBE-AI/App/h1_inference.h
-C:/ST/AtmosAI_ETRS606_user/FSBL/NetXDuo/App/app_netxduo.h:
+C:/Users/William/Documents/GitHub/AtmosAI_ETRS606/FSBL/NetXDuo/App/app_netxduo.h:
 ../../../Middlewares/ST/netxduo/common/inc/nx_api.h:
 ../../../Middlewares/ST/threadx/ports/cortex_m55/gnu/inc/tx_port.h:
 ../../../FSBL/Core/Inc/tx_user.h:
@@ -107,6 +108,7 @@ C:/ST/AtmosAI_ETRS606_user/FSBL/NetXDuo/App/app_netxduo.h:
 ../../../Middlewares/ST/netxduo/common/inc/nx_udp.h:
 ../../../Middlewares/ST/netxduo/common/inc/nx_ip.h:
 ../../../Middlewares/ST/netxduo/common/inc/nx_ipv4.h:
-C:/ST/AtmosAI_ETRS606_user/STM32CubeIDE/FSBL/Drivers/STMems/hts221_reg.h:
-C:/ST/AtmosAI_ETRS606_user/STM32CubeIDE/FSBL/Drivers/STMems/lps22hh_reg.h:
+C:/Users/William/Documents/GitHub/AtmosAI_ETRS606/STM32CubeIDE/FSBL/Drivers/STMems/hts221_reg.h:
+C:/Users/William/Documents/GitHub/AtmosAI_ETRS606/STM32CubeIDE/FSBL/Drivers/STMems/lps22hh_reg.h:
+C:/Users/William/Documents/GitHub/AtmosAI_ETRS606/STM32CubeIDE/FSBL/Drivers/STMems/lsm6dso_reg.h:
 ../../../FSBL/X-CUBE-AI/App/h1_inference.h:

@@ -21,12 +21,12 @@
 ../../../Middlewares/ST/AI/Npu/ll_aton/ll_aton_dbgtrc.c:605:5:LL_Dbgtrc_Count_StrengActive_Config	4
 ../../../Middlewares/ST/AI/Npu/ll_aton/ll_aton_dbgtrc.c:648:5:LL_Dbgtrc_Count_StrengActive_Start	3
 ../../../Middlewares/ST/AI/Npu/ll_aton/ll_aton_dbgtrc.c:669:5:LL_Dbgtrc_Count_StrengActive_Stop	3
-../../../Middlewares/ST/AI/Npu/ll_aton/ll_aton_dbgtrc.c:689:5:LL_Dbgtrc_Count_StrengActive_Print	3
+../../../Middlewares/ST/AI/Npu/ll_aton/ll_aton_dbgtrc.c:689:5:LL_Dbgtrc_Count_StrengActive_Print	2
 ../../../Middlewares/ST/AI/Npu/ll_aton/ll_aton_dbgtrc.c:715:14:LL_Dbgtrc_Count_StrengActive_GetMAX	4
 ../../../Middlewares/ST/AI/Npu/ll_aton/ll_aton_dbgtrc.c:756:5:LL_Dbgtrc_Count_StrengHENV_Config	3
 ../../../Middlewares/ST/AI/Npu/ll_aton/ll_aton_dbgtrc.c:787:5:LL_Dbgtrc_Count_StrengHENV_Start	3
 ../../../Middlewares/ST/AI/Npu/ll_aton/ll_aton_dbgtrc.c:804:5:LL_Dbgtrc_Count_StrengHENV_Stop	3
-../../../Middlewares/ST/AI/Npu/ll_aton/ll_aton_dbgtrc.c:821:5:LL_Dbgtrc_Count_StrengHENV_Print	3
+../../../Middlewares/ST/AI/Npu/ll_aton/ll_aton_dbgtrc.c:821:5:LL_Dbgtrc_Count_StrengHENV_Print	2
 ../../../Middlewares/ST/AI/Npu/ll_aton/ll_aton_dbgtrc.c:852:5:LL_Dbgtrc_Count_BurstsLen	3
 ../../../Middlewares/ST/AI/Npu/ll_aton/ll_aton_dbgtrc.c:912:5:LL_Dbgtrc_BurstLenBenchStart	1
 ../../../Middlewares/ST/AI/Npu/ll_aton/ll_aton_dbgtrc.c:929:5:LL_Dbgtrc_BurstLenGet	2

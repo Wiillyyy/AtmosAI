@@ -18,11 +18,69 @@
 # ===========================================================================
 
 # ---------------------------------------------------------------------------
-# 1) subdir.mk files whose OBJS contain NO spaces — safe to include directly
+# 1) ThreadX — Core (common/src) + Cortex-M55 port (ports/cortex_m55/gnu/src)
+#    Not listed in .project, so we compile them explicitly.
 # ---------------------------------------------------------------------------
--include Middlewares/threadx/Core/subdir.mk
--include Drivers/BSP/Components/subdir.mk
--include Drivers/CMSIS/subdir.mk
+# Make is invoked from Debug/, so ../../../ points to the project root
+TX_REPO := ../../../Middlewares/ST/threadx
+
+TXCORE_SRC_DIR := $(TX_REPO)/common/src
+TXCORE_OBJ_DIR := Middlewares/threadx/Core
+TXCORE_SRCS    := $(wildcard $(TXCORE_SRC_DIR)/*.c)
+TXCORE_OBJS    := $(patsubst $(TXCORE_SRC_DIR)/%.c,$(TXCORE_OBJ_DIR)/%.o,$(TXCORE_SRCS))
+
+TXPORT_SRC_DIR := $(TX_REPO)/ports/cortex_m55/gnu/src
+TXPORT_OBJ_DIR := Middlewares/threadx/Port
+TXPORT_C_SRCS  := $(wildcard $(TXPORT_SRC_DIR)/*.c)
+TXPORT_S_SRCS  := $(wildcard $(TXPORT_SRC_DIR)/*.S)
+TXPORT_OBJS    := \
+  $(patsubst $(TXPORT_SRC_DIR)/%.c,$(TXPORT_OBJ_DIR)/%.o,$(TXPORT_C_SRCS)) \
+  $(patsubst $(TXPORT_SRC_DIR)/%.S,$(TXPORT_OBJ_DIR)/%.o,$(TXPORT_S_SRCS))
+
+OBJS += $(TXCORE_OBJS) $(TXPORT_OBJS)
+
+$(TXCORE_OBJ_DIR)/%.o: $(TXCORE_SRC_DIR)/%.c
+	@mkdir -p $(dir $@)
+	arm-none-eabi-gcc "$<" $(ATON_CFLAGS) -MF"$(@:.o=.d)" -MT"$@" -c -o "$@"
+
+$(TXPORT_OBJ_DIR)/%.o: $(TXPORT_SRC_DIR)/%.c
+	@mkdir -p $(dir $@)
+	arm-none-eabi-gcc "$<" $(ATON_CFLAGS) -MF"$(@:.o=.d)" -MT"$@" -c -o "$@"
+
+$(TXPORT_OBJ_DIR)/%.o: $(TXPORT_SRC_DIR)/%.S
+	@mkdir -p $(dir $@)
+	arm-none-eabi-gcc -mcpu=cortex-m55 -c -x assembler-with-cpp \
+	  -DDEBUG -DTX_SINGLE_MODE_SECURE=1 \
+	  -I../../../Middlewares/ST/threadx/common/inc \
+	  -I../../../Middlewares/ST/threadx/ports/cortex_m55/gnu/inc \
+	  -mfpu=fpv5-d16 -mfloat-abi=hard -mthumb -mcmse \
+	  -MMD -MP -MF"$(@:.o=.d)" -MT"$@" "$<" -o "$@"
+
+# ---------------------------------------------------------------------------
+# 1b) BSP LAN8742 — not listed in .project either
+# ---------------------------------------------------------------------------
+BSP_LAN_SRC_DIR := ../../../Drivers/BSP/Components/lan8742
+BSP_LAN_OBJ_DIR := Drivers/BSP/Components/lan8742
+BSP_LAN_SRCS    := $(wildcard $(BSP_LAN_SRC_DIR)/*.c)
+BSP_LAN_OBJS    := $(patsubst $(BSP_LAN_SRC_DIR)/%.c,$(BSP_LAN_OBJ_DIR)/%.o,$(BSP_LAN_SRCS))
+
+OBJS += $(BSP_LAN_OBJS)
+
+$(BSP_LAN_OBJ_DIR)/%.o: $(BSP_LAN_SRC_DIR)/%.c
+	@mkdir -p $(dir $@)
+	arm-none-eabi-gcc "$<" $(ATON_CFLAGS) -MF"$(@:.o=.d)" -MT"$@" -c -o "$@"
+
+# ---------------------------------------------------------------------------
+# 1c) CMSIS system init — defines SystemCoreClock / SystemCoreClockUpdate
+# ---------------------------------------------------------------------------
+CMSIS_SYS_SRC := ../../../FSBL/Core/Src/system_stm32n6xx_fsbl.c
+CMSIS_SYS_OBJ := Application/User/Core/system_stm32n6xx_fsbl.o
+
+OBJS += $(CMSIS_SYS_OBJ)
+
+$(CMSIS_SYS_OBJ): $(CMSIS_SYS_SRC)
+	@mkdir -p $(dir $@)
+	arm-none-eabi-gcc "$<" $(ATON_CFLAGS) -MF"$(@:.o=.d)" -MT"$@" -c -o "$@"
 
 # ---------------------------------------------------------------------------
 # 2) NetXDuo — compile to space-free output directories

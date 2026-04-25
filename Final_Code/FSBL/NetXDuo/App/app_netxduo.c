@@ -22,6 +22,7 @@
 #include "app_netxduo.h"
 #include <stdio.h>
 #include <math.h>
+#include <string.h>
 
 /* Private includes ----------------------------------------------------------*/
 #include "nxd_dhcp_client.h"
@@ -29,6 +30,7 @@
 #include "main.h"
 #include "hts221_reg.h"
 #include "lps22hh_reg.h"
+#include "lsm6dso_reg.h"
 #include "h1_inference.h"
 /* USER CODE END Includes */
 
@@ -71,12 +73,25 @@ volatile float g_cpu_load_pct   = 0.0f;
 volatile float g_infer_time_us  = 0.0f;
 volatile float g_power_mw       = 0.0f;
 volatile float g_cycle_ms       = 0.0f;
+volatile uint8_t g_imu_ok       = 0U;
+volatile float g_accel_x_mg     = 0.0f;
+volatile float g_accel_y_mg     = 0.0f;
+volatile float g_accel_z_mg     = 0.0f;
+volatile float g_gyro_x_mdps    = 0.0f;
+volatile float g_gyro_y_mdps    = 0.0f;
+volatile float g_gyro_z_mdps    = 0.0f;
 volatile unsigned long g_uptime_s = 0;
 volatile unsigned long g_post_ok_count = 0;
 volatile unsigned long g_post_fail_count = 0;
 volatile unsigned long g_sample_seq = 0;
 volatile char  g_post_status[16] = "idle";
-volatile char  g_server_cmd[16] = "none";   /* Downlink VPS → carte */
+/*
+ * Variables partagees entre threads :
+ * - App_Sensor_Thread_Entry produit les mesures et incremente g_sample_seq.
+ * - App_TCP_Thread_Entry attend ce compteur, puis POST la mesure vers le VPS.
+ * - g_server_cmd contient la commande recue par GET /api/command (downlink).
+ */
+volatile char  g_server_cmd[16] = "none";   /* Downlink VPS -> carte */
 
 /* USER CODE END PV */
 
@@ -88,6 +103,7 @@ static VOID App_TCP_Thread_Entry(ULONG thread_input);
 static VOID App_Link_Thread_Entry(ULONG thread_input);
 static VOID App_Sensor_Thread_Entry(ULONG thread_input);
 static void App_Try_Init_Npu(void);
+static UINT App_Resolve_Server_Ip(ULONG *server_ip);
 extern void LL_ATON_RT_RuntimeInit(void);
 /* USER CODE END PFP */
 /* --- COLLE LES 4 FONCTIONS I2C ICI --- */
@@ -112,6 +128,20 @@ int32_t lps22hh_write(void *handle, uint8_t reg, const uint8_t *bufp, uint16_t l
 
 int32_t lps22hh_read(void *handle, uint8_t reg, uint8_t *bufp, uint16_t len) {
     if (HAL_I2C_Mem_Read((I2C_HandleTypeDef*)handle, LPS22HH_I2C_ADD_H, reg, I2C_MEMADD_SIZE_8BIT, bufp, len, 1000) == HAL_OK)
+        return 0;
+    return -1;
+}
+
+static uint16_t g_lsm6dso_i2c_addr = LSM6DSO_I2C_ADD_H;
+
+int32_t lsm6dso_write(void *handle, uint8_t reg, const uint8_t *bufp, uint16_t len) {
+    if (HAL_I2C_Mem_Write((I2C_HandleTypeDef*)handle, g_lsm6dso_i2c_addr, reg, I2C_MEMADD_SIZE_8BIT, (uint8_t*)bufp, len, 1000) == HAL_OK)
+        return 0;
+    return -1;
+}
+
+int32_t lsm6dso_read(void *handle, uint8_t reg, uint8_t *bufp, uint16_t len) {
+    if (HAL_I2C_Mem_Read((I2C_HandleTypeDef*)handle, g_lsm6dso_i2c_addr, reg, I2C_MEMADD_SIZE_8BIT, bufp, len, 1000) == HAL_OK)
         return 0;
     return -1;
 }
@@ -302,10 +332,11 @@ UINT MX_NetXDuo_Init(VOID *memory_ptr)
   }
 
   /* create the Link thread */
+    /* Created suspended — resumed by nx_app_thread_entry once DHCP is up */
     ret = tx_thread_create(&AppSensorThread, "App Sensor Thread", App_Sensor_Thread_Entry, 0,
     		pointer, NX_APP_THREAD_STACK_SIZE,
 			NX_APP_THREAD_PRIORITY + 1, NX_APP_THREAD_PRIORITY + 1,
-			TX_NO_TIME_SLICE, TX_AUTO_START);
+			TX_NO_TIME_SLICE, TX_DONT_START);
 
   if (ret != TX_SUCCESS)
   {
@@ -408,6 +439,9 @@ static VOID nx_app_thread_entry (ULONG thread_input)
   /* the network is correctly initialized, start the TCP server thread */
   tx_thread_resume(&AppTCPThread);
 
+  /* network is up — now start the sensor / inference cycles */
+  tx_thread_resume(&AppSensorThread);
+
   /* if this thread is not needed any more, we relinquish it */
   tx_thread_relinquish();
 
@@ -427,8 +461,14 @@ static VOID App_Sensor_Thread_Entry(ULONG thread_input)
     extern I2C_HandleTypeDef hi2c1;
     static unsigned long s_cycle_id = 0;
 
+    /*
+     * Thread principal applicatif cote capteurs.
+     * Il initialise les trois familles de capteurs du shield IKS01A3, puis
+     * boucle toutes les ~5 s : lecture capteurs, inference H+1, LEDs, telemetry.
+     */
+
     // Fonctions I2C
-    stmdev_ctx_t dev_ctx_hts221, dev_ctx_lps22hh;
+    stmdev_ctx_t dev_ctx_hts221, dev_ctx_lps22hh, dev_ctx_lsm6dso;
 
     // HTS221
     dev_ctx_hts221.write_reg = hts221_write;
@@ -440,12 +480,44 @@ static VOID App_Sensor_Thread_Entry(ULONG thread_input)
     dev_ctx_lps22hh.read_reg  = lps22hh_read;
     dev_ctx_lps22hh.handle    = (void*)&hi2c1;
 
+    // LSM6DSO accel + gyroscope
+    dev_ctx_lsm6dso.write_reg = lsm6dso_write;
+    dev_ctx_lsm6dso.read_reg  = lsm6dso_read;
+    dev_ctx_lsm6dso.handle    = (void*)&hi2c1;
+
     // Config capteurs
     lps22hh_block_data_update_set(&dev_ctx_lps22hh, PROPERTY_ENABLE);
     lps22hh_data_rate_set(&dev_ctx_lps22hh, LPS22HH_1_Hz_LOW_NOISE);
     hts221_block_data_update_set(&dev_ctx_hts221, PROPERTY_ENABLE);
     hts221_power_on_set(&dev_ctx_hts221, PROPERTY_ENABLE);
     hts221_data_rate_set(&dev_ctx_hts221, HTS221_ODR_1Hz);
+
+    /*
+     * Detection + activation IMU.
+     * Le LSM6DSO peut repondre sur deux adresses selon le cablage du shield :
+     * on teste l'adresse haute puis l'adresse basse avant de declarer IMU OK.
+     */
+    uint8_t lsm6dso_id = 0U;
+    g_lsm6dso_i2c_addr = LSM6DSO_I2C_ADD_H;
+    lsm6dso_device_id_get(&dev_ctx_lsm6dso, &lsm6dso_id);
+    if (lsm6dso_id != LSM6DSO_ID) {
+        g_lsm6dso_i2c_addr = LSM6DSO_I2C_ADD_L;
+        lsm6dso_device_id_get(&dev_ctx_lsm6dso, &lsm6dso_id);
+    }
+
+    if (lsm6dso_id == LSM6DSO_ID) {
+        g_imu_ok = 1U;
+        lsm6dso_block_data_update_set(&dev_ctx_lsm6dso, PROPERTY_ENABLE);
+        lsm6dso_auto_increment_set(&dev_ctx_lsm6dso, PROPERTY_ENABLE);
+        lsm6dso_xl_full_scale_set(&dev_ctx_lsm6dso, LSM6DSO_2g);
+        lsm6dso_gy_full_scale_set(&dev_ctx_lsm6dso, LSM6DSO_250dps);
+        lsm6dso_xl_data_rate_set(&dev_ctx_lsm6dso, LSM6DSO_XL_ODR_26Hz);
+        lsm6dso_gy_data_rate_set(&dev_ctx_lsm6dso, LSM6DSO_GY_ODR_26Hz);
+        printf("[IMU] LSM6DSO initialise (addr=0x%02lX)\r\n", (unsigned long)g_lsm6dso_i2c_addr);
+    } else {
+        g_imu_ok = 0U;
+        printf("[IMU] LSM6DSO introuvable (whoami=0x%02X)\r\n", lsm6dso_id);
+    }
 
     // Calibration HTS221
     float T0_degC, T1_degC, H0_rh, H1_rh;
@@ -476,7 +548,7 @@ static VOID App_Sensor_Thread_Entry(ULONG thread_input)
 
     App_Try_Init_Npu();
 
-/* Initialise le ring buffer d'inférence H+1 */
+    /* Initialise le ring buffer d'inference H+1 */
     h1_init();
 
     /* ── DWT cycle counter (Cortex-M55) ── */
@@ -496,6 +568,10 @@ static VOID App_Sensor_Thread_Entry(ULONG thread_input)
     {
         if (strcmp((char*)g_server_cmd, "dance") == 0)
         {
+            /*
+             * Commande recue depuis le VPS : le cycle normal est pause pendant
+             * 20 s pour montrer la communication serveur -> carte via les LEDs.
+             */
             const uint32_t dance_duration_ms = 20000UL;
             const uint32_t dance_toggle_ms = 80UL;
             const int dance_bar_width = 20;
@@ -607,12 +683,41 @@ static VOID App_Sensor_Thread_Entry(ULONG thread_input)
             printf("[SNS] Humidite    : %.2f %%\r\n", g_humidity);
         }
 
+        if (g_imu_ok) {
+            int16_t raw_accel[3] = {0};
+            int16_t raw_gyro[3] = {0};
+
+            if (lsm6dso_acceleration_raw_get(&dev_ctx_lsm6dso, raw_accel) == 0 &&
+                lsm6dso_angular_rate_raw_get(&dev_ctx_lsm6dso, raw_gyro) == 0) {
+                g_accel_x_mg = lsm6dso_from_fs2_to_mg(raw_accel[0]);
+                g_accel_y_mg = lsm6dso_from_fs2_to_mg(raw_accel[1]);
+                g_accel_z_mg = lsm6dso_from_fs2_to_mg(raw_accel[2]);
+                g_gyro_x_mdps = lsm6dso_from_fs250_to_mdps(raw_gyro[0]);
+                g_gyro_y_mdps = lsm6dso_from_fs250_to_mdps(raw_gyro[1]);
+                g_gyro_z_mdps = lsm6dso_from_fs250_to_mdps(raw_gyro[2]);
+
+                printf("[IMU] Accel mg   : X=%7.1f Y=%7.1f Z=%7.1f\r\n",
+                       g_accel_x_mg, g_accel_y_mg, g_accel_z_mg);
+                printf("[IMU] Gyro mdps  : X=%7.1f Y=%7.1f Z=%7.1f\r\n",
+                       g_gyro_x_mdps, g_gyro_y_mdps, g_gyro_z_mdps);
+            } else {
+                printf("[IMU] Lecture accel/gyro echouee\r\n");
+            }
+        }
+
         printf("[SNS] ----------------------------------\r\n");
 
-        /* Pousse dans le ring buffer MLP */
+        /*
+         * On stocke chaque mesure dans le ring buffer H+1.
+         * Les deltas 1h/3h sont calcules a partir de cet historique.
+         */
         h1_push(g_temperature, g_humidity, g_pressure);
 
-        /* Inférence MLP H+1 (C pur, sans NPU) — mesure précise DWT */
+        /*
+         * Inference meteo H+1.
+         * Le modele final execute le MLP en C pur pour garantir une demo stable.
+         * Le DWT mesure le nombre de cycles CPU consommes par h1_infer().
+         */
         uint32_t t_infer_start = DWT->CYCCNT;
         H1Result res = h1_infer();
         s_infer_cycles = DWT->CYCCNT - t_infer_start;
@@ -650,7 +755,11 @@ static VOID App_Sensor_Thread_Entry(ULONG thread_input)
             printf("[H1] Resume: historique insuffisant\r\n");
         }
 
-        /* Signale au thread TCP qu'un nouveau cycle capteurs + inference est pret. */
+        /*
+         * Handshake interne : le thread TCP ne POST pas en boucle libre.
+         * Il attend que ce compteur change pour envoyer exactement la derniere
+         * mesure complete du cycle courant.
+         */
         g_sample_seq++;
 
         /* Fin de la partie active — capture avant les sleeps */
@@ -673,12 +782,8 @@ static VOID App_Sensor_Thread_Entry(ULONG thread_input)
 /* Couvre : AXISRAM2/3 (EC blob + poids) + AXISRAM5 (I/O NPU)  */
 /* Doit être appelé AVANT LL_ATON_RT_RuntimeInit()             */
 /* ============================================================ */
-#ifndef RISAF4_BASE
 #define RISAF4_BASE  0x54029000UL
-#endif
-#ifndef RISAF5_BASE
 #define RISAF5_BASE  0x5402A000UL
-#endif
 
 typedef struct {
     volatile uint32_t CFGR, STARTR, ENDR, CIDCFGR;
@@ -744,6 +849,149 @@ static void App_Try_Init_Npu(void)
     printf("[NPU] Runtime initialise\r\n");
 }
 
+/*
+ * Resolution DNS minimale sans addon nxd_dns.
+ * Le projet garde l'IP fixe en fallback : si Google DNS est bloque ou lent,
+ * la demo continue quand meme avec l'adresse connue du VPS.
+ */
+static UINT App_Resolve_Server_Ip(ULONG *server_ip)
+{
+  NX_UDP_SOCKET dns_socket;
+  NX_PACKET *packet = NX_NULL;
+  NX_PACKET *reply = NX_NULL;
+  UCHAR query[96];
+  UCHAR response[512];
+  ULONG bytes_read = 0;
+  UINT ret;
+  UINT pos = 0;
+  UINT answer_count;
+  UINT offset;
+  const char *labels[] = {"atmosai", "willydev", "xyz"};
+  const ULONG dns_server = IP_ADDRESS(8, 8, 8, 8);
+  const ULONG fallback_ip = IP_ADDRESS(45, 155, 170, 159);
+
+  *server_ip = fallback_ip;
+  memset(query, 0, sizeof(query));
+
+  /* Header DNS : ID=0xA17A, recursion desired, QDCOUNT=1. */
+  query[pos++] = 0xA1; query[pos++] = 0x7A;
+  query[pos++] = 0x01; query[pos++] = 0x00;
+  query[pos++] = 0x00; query[pos++] = 0x01;
+  query[pos++] = 0x00; query[pos++] = 0x00;
+  query[pos++] = 0x00; query[pos++] = 0x00;
+  query[pos++] = 0x00; query[pos++] = 0x00;
+
+  for (UINT i = 0; i < 3; i++) {
+    size_t len = strlen(labels[i]);
+    if ((pos + len + 1U) >= sizeof(query)) {
+      return NX_NOT_SUCCESSFUL;
+    }
+    query[pos++] = (UCHAR)len;
+    memcpy(&query[pos], labels[i], len);
+    pos += (UINT)len;
+  }
+  query[pos++] = 0x00;             /* fin QNAME */
+  query[pos++] = 0x00; query[pos++] = 0x01; /* QTYPE A */
+  query[pos++] = 0x00; query[pos++] = 0x01; /* QCLASS IN */
+
+  ret = nx_udp_socket_create(&NetXDuoEthIpInstance, &dns_socket, "Mini DNS",
+                             NX_IP_NORMAL, NX_DONT_FRAGMENT,
+                             NX_IP_TIME_TO_LIVE, 2);
+  if (ret != NX_SUCCESS) {
+    printf("[DNS] Socket KO 0x%04X -> fallback IP fixe\r\n", (unsigned)ret);
+    return ret;
+  }
+
+  ret = nx_udp_socket_bind(&dns_socket, NX_ANY_PORT, NX_IP_PERIODIC_RATE);
+  if (ret != NX_SUCCESS) {
+    printf("[DNS] Bind KO 0x%04X -> fallback IP fixe\r\n", (unsigned)ret);
+    nx_udp_socket_delete(&dns_socket);
+    return ret;
+  }
+
+  ret = nx_packet_allocate(&NxAppPool, &packet, NX_UDP_PACKET, NX_IP_PERIODIC_RATE);
+  if (ret == NX_SUCCESS) {
+    ret = nx_packet_data_append(packet, query, pos, &NxAppPool, NX_IP_PERIODIC_RATE);
+    if (ret != NX_SUCCESS) {
+      nx_packet_release(packet);
+    }
+  }
+  if (ret == NX_SUCCESS) {
+    ret = nx_udp_socket_send(&dns_socket, packet, dns_server, 53);
+    if (ret != NX_SUCCESS) {
+      nx_packet_release(packet);
+    }
+  }
+
+  if (ret != NX_SUCCESS) {
+    printf("[DNS] Envoi KO 0x%04X -> fallback IP fixe\r\n", (unsigned)ret);
+    nx_udp_socket_unbind(&dns_socket);
+    nx_udp_socket_delete(&dns_socket);
+    return ret;
+  }
+
+  ret = nx_udp_socket_receive(&dns_socket, &reply, 2 * NX_IP_PERIODIC_RATE);
+  if (ret != NX_SUCCESS) {
+    printf("[DNS] Timeout/erreur 0x%04X -> fallback IP fixe\r\n", (unsigned)ret);
+    nx_udp_socket_unbind(&dns_socket);
+    nx_udp_socket_delete(&dns_socket);
+    return ret;
+  }
+
+  nx_packet_data_retrieve(reply, response, &bytes_read);
+  nx_packet_release(reply);
+  nx_udp_socket_unbind(&dns_socket);
+  nx_udp_socket_delete(&dns_socket);
+
+  if (bytes_read < 12U || response[0] != 0xA1 || response[1] != 0x7A) {
+    printf("[DNS] Reponse invalide -> fallback IP fixe\r\n");
+    return NX_NOT_SUCCESSFUL;
+  }
+
+  answer_count = ((UINT)response[6] << 8) | response[7];
+
+  /* Saute la question : header 12 + QNAME + QTYPE/QCLASS. */
+  offset = 12U;
+  while (offset < bytes_read && response[offset] != 0U) {
+    offset += (UINT)response[offset] + 1U;
+  }
+  offset += 5U;
+
+  for (UINT ans = 0; ans < answer_count && (offset + 12U) <= bytes_read; ans++) {
+    UINT type, class_, rdlen;
+
+    /* NAME peut etre compresse (0xC0xx) ou non. */
+    if ((response[offset] & 0xC0U) == 0xC0U) {
+      offset += 2U;
+    } else {
+      while (offset < bytes_read && response[offset] != 0U) {
+        offset += (UINT)response[offset] + 1U;
+      }
+      offset++;
+    }
+
+    if ((offset + 10U) > bytes_read) break;
+    type = ((UINT)response[offset] << 8) | response[offset + 1U];
+    class_ = ((UINT)response[offset + 2U] << 8) | response[offset + 3U];
+    rdlen = ((UINT)response[offset + 8U] << 8) | response[offset + 9U];
+    offset += 10U;
+
+    if ((offset + rdlen) > bytes_read) break;
+    if (type == 1U && class_ == 1U && rdlen == 4U) {
+      *server_ip = IP_ADDRESS(response[offset], response[offset + 1U],
+                              response[offset + 2U], response[offset + 3U]);
+      printf("[DNS] atmosai.willydev.xyz -> %u.%u.%u.%u\r\n",
+             response[offset], response[offset + 1U],
+             response[offset + 2U], response[offset + 3U]);
+      return NX_SUCCESS;
+    }
+    offset += rdlen;
+  }
+
+  printf("[DNS] A record introuvable -> fallback IP fixe\r\n");
+  return NX_NOT_SUCCESSFUL;
+}
+
 static VOID App_TCP_Thread_Entry(ULONG thread_input)
 {
   UINT ret;
@@ -752,13 +1000,22 @@ static VOID App_TCP_Thread_Entry(ULONG thread_input)
   NX_PACKET *server_packet;
   NX_PACKET *data_packet;
 
-  /* Renseigne l'IP publique de ton VPS ici */
+  /* IP publique connue du VPS : utilisee comme fallback si le DNS echoue. */
   ULONG server_ip = IP_ADDRESS(45, 155, 170, 159);
   UINT server_port = 5080;
 
-  static char json_payload[512];
-  static char http_request[1024];
+  static char json_payload[768];
+  static char http_request[1280];
   ULONG last_posted_seq = 0;
+
+  /*
+   * Thread reseau applicatif.
+   * Il fonctionne en client HTTP tres simple :
+   * 1) attend une nouvelle mesure produite par le thread capteurs,
+   * 2) ouvre une socket TCP vers le VPS,
+   * 3) envoie un POST /api/data avec un JSON,
+   * 4) fait ensuite un GET /api/command pour recuperer une commande serveur.
+   */
 
   ret = nx_tcp_socket_create(&NetXDuoEthIpInstance, &TCPSocket, "TCP Client Socket",
                              NX_IP_NORMAL, NX_FRAGMENT_OKAY, NX_IP_TIME_TO_LIVE,
@@ -774,9 +1031,23 @@ static VOID App_TCP_Thread_Entry(ULONG thread_input)
   /* Laisser l'ARP du gateway se resoudre avant les premiers envois. */
   tx_thread_sleep(500);
 
+  /*
+   * Resolution DNS optionnelle.
+   * Si 8.8.8.8 ne repond pas sur le reseau de demo, server_ip reste l'IP fixe.
+   */
+  if (App_Resolve_Server_Ip(&server_ip) == NX_SUCCESS) {
+    printf("[DNS] Utilisation du domaine pour les connexions VPS\r\n");
+  } else {
+    printf("[DNS] Utilisation fallback IP fixe 45.155.170.159\r\n");
+  }
+
   while(1)
   {
     ULONG pending_seq = g_sample_seq;
+    /*
+     * g_sample_seq est incremente uniquement quand un cycle capteurs+inference
+     * est termine. Cela evite de POST plusieurs fois la meme mesure.
+     */
     if ((pending_seq == 0U) || (pending_seq == last_posted_seq))
     {
       tx_thread_sleep(20);
@@ -786,23 +1057,40 @@ static VOID App_TCP_Thread_Entry(ULONG thread_input)
     last_posted_seq = pending_seq;
     printf("[POST] Nouvelle mesure #%lu -> tentative envoi VPS\r\n", pending_seq);
 
-    printf("Tentative connexion VPS 45.155.170.159:5080...\r\n");
+    printf("Tentative connexion VPS atmosai.willydev.xyz [%lu.%lu.%lu.%lu]:%u...\r\n",
+           (server_ip >> 24) & 0xFFUL, (server_ip >> 16) & 0xFFUL,
+           (server_ip >> 8) & 0xFFUL, server_ip & 0xFFUL,
+           (unsigned)server_port);
     ret = nx_tcp_client_socket_connect(&TCPSocket, server_ip, server_port, 10 * NX_IP_PERIODIC_RATE);
     printf("Connexion ret=0x%04X\r\n", (unsigned)ret);
 
     if (ret == NX_SUCCESS)
     {
-      /* 1. Formatage du JSON */
+      /*
+       * 1. Formatage du JSON envoye au VPS.
+       * Il contient les mesures meteo, l'IMU, la prediction H+1 et quelques
+       * infos de supervision pour alimenter index.html / index2.html.
+       */
       int json_len = snprintf(json_payload, sizeof(json_payload),
           "{\"device_id\":\"NUCLEO-N657X0\","
           "\"temperature\":%.1f,\"humidity\":%.1f,\"pressure\":%.1f,"
           "\"prediction_h1\":\"%s\",\"confidence_h1\":%.4f,"
+          "\"imu_ok\":%u,"
+          "\"accel_x_mg\":%.1f,\"accel_y_mg\":%.1f,\"accel_z_mg\":%.1f,"
+          "\"gyro_x_mdps\":%.1f,\"gyro_y_mdps\":%.1f,\"gyro_z_mdps\":%.1f,"
           "\"cpu_load\":%.1f,\"infer_time_us\":%.2f,\"power_mw\":%.1f,"
           "\"cycle_ms\":%.0f,\"uptime_s\":%lu,"
           "\"post_status\":\"%s\",\"post_ok_count\":%lu,\"post_fail_count\":%lu}",
           g_temperature, g_humidity, g_pressure,
           (g_prediction_h1[0] ? (const char *)g_prediction_h1 : ""),
           (double)g_confidence_h1,
+          (unsigned)g_imu_ok,
+          (double)g_accel_x_mg,
+          (double)g_accel_y_mg,
+          (double)g_accel_z_mg,
+          (double)g_gyro_x_mdps,
+          (double)g_gyro_y_mdps,
+          (double)g_gyro_z_mdps,
           (double)g_cpu_load_pct,
           (double)g_infer_time_us,
           (double)g_power_mw,
@@ -812,7 +1100,11 @@ static VOID App_TCP_Thread_Entry(ULONG thread_input)
           g_post_ok_count,
           g_post_fail_count);
 
-      /* 2. Formatage de la requête HTTP brute (Le Content-Length dynamique est crucial) */
+      /*
+       * 2. Requete HTTP brute.
+       * Sur embarque on n'utilise pas de grosse librairie HTTP : on ecrit les
+       * headers nous-memes. Content-Length doit correspondre exactement au JSON.
+       */
       int req_len = snprintf(http_request, sizeof(http_request),
           "POST /api/data HTTP/1.1\r\n"
           "Host: atmosai.willydev.xyz\r\n"
@@ -823,14 +1115,21 @@ static VOID App_TCP_Thread_Entry(ULONG thread_input)
           "%s",
           json_len, json_payload);
 
-      /* 3. Allocation et envoi */
+      /*
+       * 3. Allocation NetX + envoi TCP.
+       * NetXDuo manipule des NX_PACKET : on copie la requete dedans, puis
+       * nx_tcp_socket_send() l'envoie au serveur.
+       */
       ret = nx_packet_allocate(&NxAppPool, &data_packet, NX_TCP_PACKET, TX_WAIT_FOREVER);
       if (ret == NX_SUCCESS)
       {
         nx_packet_data_append(data_packet, (VOID *)http_request, req_len, &NxAppPool, TX_WAIT_FOREVER);
         nx_tcp_socket_send(&TCPSocket, data_packet, DEFAULT_TIMEOUT);
 
-        /* 4. Lecture de la réponse de Flask */
+        /*
+         * 4. Lecture de la reponse Flask.
+         * L'application Flask renvoie 201 quand la mesure est bien stockee.
+         */
         ret = nx_tcp_socket_receive(&TCPSocket, &server_packet, DEFAULT_TIMEOUT);
         if (ret == NX_SUCCESS)
         {
@@ -870,7 +1169,12 @@ static VOID App_TCP_Thread_Entry(ULONG thread_input)
       /* Déconnexion propre après le POST */
       nx_tcp_socket_disconnect(&TCPSocket, DEFAULT_TIMEOUT);
 
-      /* ── GET /api/command — downlink VPS → carte ── */
+      /*
+       * Downlink VPS -> carte.
+       * Apres le POST, la carte interroge le serveur avec GET /api/command.
+       * Si Flask renvoie "dance", le thread capteurs executera le mode danse
+       * au prochain tour de boucle.
+       */
       int get_len = snprintf(http_request, sizeof(http_request),
           "GET /api/command HTTP/1.1\r\n"
           "Host: atmosai.willydev.xyz\r\n"

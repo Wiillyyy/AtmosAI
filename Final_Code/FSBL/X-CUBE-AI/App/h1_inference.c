@@ -14,10 +14,10 @@
 /* ============================================================ */
 
 /*
- * 2240 entrees x ~5 s = ~3h06min.
+ * 560 entrees x ~20 s = ~3h7min.
  * Suffisant pour calculer les deltas sur 1h et 3h.
  */
-#define H1_BUF_LEN   2240
+#define H1_BUF_LEN   560
 
 typedef struct {
     float    temp;
@@ -162,13 +162,7 @@ H1Result h1_infer(void)
 
     if (s_count < 1) return result;
 
-    /* ── Tentative NPU via STAI API ─────────────────────────
-     * Initialisation unique du runtime ATON + reseau.
-     * L'inference est lancee en mode ASYNC (non-bloquant) :
-     * le CPU prend le relais immediatement apres.
-     * (EC_IRQ gere par le runtime, assertions desactivees via
-     *  -DNDEBUG pour eviter le crash en cas d'erreur bus NPU.) */
-    /* ── Inference NPU via STAI API ─────────────────────────
+    /* ── Integration NPU via STAI API ────────────────────────
      * RuntimeInit appele depuis app_netxduo.c (App_Try_Init_Npu).
      * RISAF4+5 configures avant pour debloquer l'acces memoire NPU. */
     if (!s_stai_ready) {
@@ -182,11 +176,20 @@ H1Result h1_infer(void)
         }
     }
 
-    /* stai_network_run() non appele : EC_IRQ=0x8 persistant apres
+    /*
+     * stai_network_run() non appele dans la version finale :
+     * EC_IRQ=0x8 persistant apres plusieurs essais de placement memoire et
      * configuration RISAF4+5. CID effectif du NPU non identifiable
      * sans debug JTAG niveau registres. Calcul assure par MLP CPU. */
 
-    /* Entree courante */
+    /*
+     * Pipeline CPU :
+     * 1) recupere la derniere mesure,
+     * 2) calcule les deltas meteo 1h/3h si l'historique est disponible,
+     * 3) construit les 13 features,
+     * 4) normalise avec les moyennes/ecarts-types du training,
+     * 5) execute le MLP puis softmax.
+     */
     {
         const H1Sample *cur = buf_at(0);
         float temp = cur->temp;

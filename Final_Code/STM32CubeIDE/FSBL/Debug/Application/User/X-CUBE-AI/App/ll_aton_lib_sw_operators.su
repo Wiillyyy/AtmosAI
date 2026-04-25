@@ -7,7 +7,7 @@
 ../../../Middlewares/ST/AI/Npu/ll_aton/ll_aton_lib_sw_operators.c:156:16:__ll_slice_get_input_and_output_base_pos	56	static
 ../../../Middlewares/ST/AI/Npu/ll_aton/ll_aton_lib_sw_operators.c:192:20:__ll_slice_copy_elem	40	static
 ../../../Middlewares/ST/AI/Npu/ll_aton/ll_aton_lib_sw_operators.c:209:13:__ll_aton_lib_slice	72	static
-../../../Middlewares/ST/AI/Npu/ll_aton/ll_aton_lib_sw_operators.c:271:12:__ll_aton_lib_sw_outputs_flat_copy	64	static
+../../../Middlewares/ST/AI/Npu/ll_aton/ll_aton_lib_sw_operators.c:271:12:__ll_aton_lib_sw_outputs_flat_copy	40	static
 ../../../Middlewares/ST/AI/Npu/ll_aton/ll_aton_lib_sw_operators.c:320:13:__ll_aton_lib_split_aton_canonical	80	static
 ../../../Middlewares/ST/AI/Npu/ll_aton/ll_aton_lib_sw_operators.c:354:13:__ll_aton_lib_split_onnx_canonical	72	static
 ../../../Middlewares/ST/AI/Npu/ll_aton/ll_aton_lib_sw_operators.c:388:13:__ll_aton_lib_split_channel_batched	112	static

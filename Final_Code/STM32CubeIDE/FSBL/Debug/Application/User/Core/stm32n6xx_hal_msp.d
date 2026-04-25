@@ -1,5 +1,5 @@
 Application/User/Core/stm32n6xx_hal_msp.o: \
- C:/ST/AtmosAI_ETRS606_user/FSBL/Core/Src/stm32n6xx_hal_msp.c \
+ C:/Users/William/Documents/GitHub/AtmosAI_ETRS606/FSBL/Core/Src/stm32n6xx_hal_msp.c \
  ../../../FSBL/Core/Inc/main.h \
  ../../../Drivers/STM32N6xx_HAL_Driver/Inc/stm32n6xx_hal.h \
  ../../../FSBL/Core/Inc/stm32n6xx_hal_conf.h \

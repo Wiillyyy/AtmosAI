@@ -31,7 +31,7 @@
 ../../../Middlewares/ST/AI/Npu/ll_aton/ll_aton_dbgtrc.c:912:5:LL_Dbgtrc_BurstLenBenchStart	16	static
 ../../../Middlewares/ST/AI/Npu/ll_aton/ll_aton_dbgtrc.c:929:5:LL_Dbgtrc_BurstLenGet	32	static
 ../../../Middlewares/ST/AI/Npu/ll_aton/ll_aton_dbgtrc.c:966:5:LL_Dbgtrc_GetTotalTranfers	96	static
-../../../Middlewares/ST/AI/Npu/ll_aton/ll_aton_dbgtrc.c:1000:5:LL_Dbgtrc_LogTransfers	96	static
-../../../Middlewares/ST/AI/Npu/ll_aton/ll_aton_dbgtrc.c:1047:5:LL_Dbgtrc_LogTransfers_epoch	40	static
+../../../Middlewares/ST/AI/Npu/ll_aton/ll_aton_dbgtrc.c:1000:5:LL_Dbgtrc_LogTransfers	88	static
+../../../Middlewares/ST/AI/Npu/ll_aton/ll_aton_dbgtrc.c:1047:5:LL_Dbgtrc_LogTransfers_epoch	32	static
 ../../../Middlewares/ST/AI/Npu/ll_aton/ll_aton_dbgtrc.c:1095:5:LL_Dbgtrc_Count_ExtTrigger	32	static
-../../../Middlewares/ST/AI/Npu/ll_aton/ll_aton_dbgtrc.c:1111:5:LL_Dbgtrc_SynchronousCountersTest	48	static
+../../../Middlewares/ST/AI/Npu/ll_aton/ll_aton_dbgtrc.c:1111:5:LL_Dbgtrc_SynchronousCountersTest	40	static
