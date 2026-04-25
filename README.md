@@ -5,9 +5,22 @@
 
 ---
 
-## Video
+## Demo Video
 
-[![Démonstration atmosAI](assets/thumbnail.png)](https://www.youtube.com/watch?v=44Mi2SmJl4s)
+Click the thumbnail below to watch the full project demo:
+
+<p align="center">
+  <a href="https://www.youtube.com/watch?v=44Mi2SmJl4s">
+    <img src="assets/thumbnail.png" alt="atmosAI project demo video" width="720">
+  </a>
+</p>
+
+<p align="center">
+  <a href="https://www.youtube.com/watch?v=44Mi2SmJl4s">
+    <strong>▶ Watch the full atmosAI demo</strong>
+  </a>
+</p>
+
 
 ## What we built
 
