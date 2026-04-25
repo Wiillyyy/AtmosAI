@@ -7,7 +7,7 @@
 
 ## Matériel utilisé
 
-- **NUCLEO-N657X0** — ARM Cortex-M33, 160 MHz, 320 Ko RAM, 512 Ko Flash, NPU Neural-ART
+- **NUCLEO-N657X0** — STM32N657X0, Arm Cortex-M55 jusqu’à 800 MHz, 4.2 Mo SRAM, accélérateur Neural-ART 600 GOPS
 - **X-NUCLEO-IKS01A3** — Shield capteurs MEMS (I2C)
 
 ---
