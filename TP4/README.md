@@ -71,7 +71,7 @@ En TP3 le JSON ne contenait que les mesures brutes. En TP4 il inclut la prédict
 |---|---|
 | ☀️ Clair | Verte allumée |
 | 🌧️ Pluie | Rouge allumée |
-| ❄️ Neige | Les deux allumées |
+| ❄️ Brouillard | Les deux allumées |
 
 ---
 
