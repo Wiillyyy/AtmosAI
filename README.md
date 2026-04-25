@@ -5,6 +5,10 @@
 
 ---
 
+## Video
+
+[![Démonstration atmosAI](assets/thumbnail.png)](https://www.youtube.com/watch?v=44Mi2SmJl4s)
+
 ## What we built
 
 AtmosAI is an end-to-end embedded weather station built around an **STM32 NUCLEO-N657X0** board and a self-hosted VPS dashboard.
