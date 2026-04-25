@@ -140,7 +140,7 @@ sudo cp index.html /usr/share/caddy/atmosai/index.html
 | Rolling | `rhum_6h`, `rhum_12h`, `wspd_6h` | Contexte temporel humidité/vent |
 | Physiques | `temp_dwpt_diff`, `wind_power` | Point de rosée relatif, énergie cinétique vent |
 
-### Architecture ResNet tabulaire
+### Si on voulait pousser le bouchon plus loin (pour la science)
 
 ```
 Input(32)
@@ -172,6 +172,17 @@ Test accuracy     : 99.84%
 Balanced accuracy : 99.84%
 Epochs entraînés  : 47 / 500
 ```
+
+### Pourquoi ce modèle n’a pas été embarqué
+
+Ce modèle expérimental a été entraîné pour évaluer jusqu’où il était possible de pousser les performances sur le jeu de données complet. Il atteint une accuracy très élevée, mais il n’a pas été retenu pour la version embarquée du projet.
+
+La raison principale est que ce réseau repose sur un feature engineering beaucoup plus riche que ce que la carte peut produire en conditions réelles. Certaines features comme `prcp`, `wspd`, `dwpt`, `tsun`, les accumulations de pluie ou les rolling windows longues ne sont pas directement mesurées par les capteurs embarqués HTS221/LPS22HH. Les utiliser sur la carte aurait donc nécessité soit des capteurs supplémentaires, soit des données météo externes, ce qui aurait rendu le système moins autonome.
+
+Le modèle est aussi plus lourd : architecture Dense profonde, BatchNorm, blocs résiduels, Dropout et 32 features d’entrée. Ce choix est pertinent pour une expérimentation offline sur PC, mais moins adapté à une exécution robuste sur microcontrôleur, où la simplicité, la latence et la stabilité mémoire sont prioritaires.
+
+Enfin, le score de 99.84% doit être interprété avec prudence : sur un dataset météo très enrichi, certaines features peuvent apporter une information très corrélée à la cible, voire difficilement disponible au moment réel de la prédiction. Pour la version finale, nous avons donc privilégié un modèle plus simple, basé sur les grandeurs réellement disponibles sur la carte, afin de conserver une chaîne complète cohérente : capteurs → inférence locale → POST VPS → dashboard.
+
 
 ### Entraînement
 
@@ -286,14 +297,16 @@ Le modèle TFLite peut être embarqué directement via **TFLite Micro** en inclu
 **Pourquoi VPS plutôt que ThingSpeak ?**
 Contrôle total des données, pas de limite de débit, inférence IA intégrée côté serveur, dashboard personnalisé.
 
-**Pourquoi ResNet plutôt que MLP ?**
-Les connexions résiduelles résolvent le vanishing gradient sur les couches profondes. Sur ce dataset, le gain est spectaculaire : 81% (MLP v4) → 99.84% (ResNet).
+**Pourquoi vous n'avez pas utilisé ResNet ?**
+Ce modèle avancé a été conservé comme expérimentation offline. Il montre qu’avec un feature engineering riche et des données météo complètes, le problème peut être résolu avec une très haute accuracy.
+
+Il n’a cependant pas été utilisé dans la version embarquée, car plusieurs features nécessaires ne sont pas disponibles sur la carte en temps réel (`prcp`, `wspd`, `dwpt`, `tsun`, accumulations, rolling windows longues). L’objectif final du projet étant une station autonome basée sur les capteurs embarqués, nous avons retenu un modèle plus simple, moins performant offline mais cohérent avec les données réellement mesurées et exécutable de manière stable sur STM32.
 
 **Pourquoi 3 classes séparées ?**
 Maximiser la séparabilité inter-classe dans l'espace features : Clair (rhum basse), Pluie (prcp>0), Brouillard (rhum~100% + vent nul). Les classes ambiguës comme Nuageux dégradent les performances sans apport métier.
 
-**Pourquoi Open-Meteo ?**
-API gratuite, sans clé, sans limite de débit raisonnable, 10 ans d'historique, compatible Python 3.12 sans dépendances problématiques.
+**Pourquoi Open-Meteo et pas Meteostat ?**
+API gratuite, sans clé, sans limite de débit raisonnable, 10 ans d'historique, compatible Python 3.xx sans dépendances problématiques.
 
 ---
 
