@@ -1,0 +1,6 @@
+../../../Middlewares/ST/AI/Npu/Devices/STM32N6XX/mcu_cache.c:29:6:mcu_cache_invalidate	4
+../../../Middlewares/ST/AI/Npu/Devices/STM32N6XX/mcu_cache.c:36:6:mcu_cache_clean	4
+../../../Middlewares/ST/AI/Npu/Devices/STM32N6XX/mcu_cache.c:43:6:mcu_cache_clean_invalidate	4
+../../../Middlewares/ST/AI/Npu/Devices/STM32N6XX/mcu_cache.c:50:6:mcu_cache_invalidate_range	4
+../../../Middlewares/ST/AI/Npu/Devices/STM32N6XX/mcu_cache.c:57:6:mcu_cache_clean_range	4
+../../../Middlewares/ST/AI/Npu/Devices/STM32N6XX/mcu_cache.c:63:6:mcu_cache_clean_invalidate_range	4

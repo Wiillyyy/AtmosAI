@@ -1,0 +1,128 @@
+ST Edge AI Core v2.2.0-20266 2adc00962
+Created date          : 2026-04-07 18:56:14
+Parameters            : generate --target stm32n6 --name h1 -m C:/Users/will/Downloads/model_h1/meteo_h1_model.tflite --st-neural-art n6-allmems-O3@C:/Users/will/STM32Cube/Repository/Packs/STMicroelectronics/X-CUBE-AI/10.2.0/scripts/N6_scripts/user_neuralart.json --workspace C:/Users/will/AppData/Local/Temp/mxAI_workspace24970206350001090628069945392348 --output C:/Users/will/.stm32cubemx/h1_output
+
+Model name - meteo_h1_model
+------ ---------------------------------- ------------- ------------- ------- ------------------------------- 
+m_id   layer (original)                   oshape        param/size       macc                    connected to 
+------ ---------------------------------- ------------- ------------- ------- ------------------------------- 
+0      serving_default_keras_tensor0 ()   [b:1,c:13]                                                          
+       arith_constant1 ()                 [b:32,c:13]   416/1,664                                             
+       arith_constant ()                  [b:32]        32/128                                                
+       gemm_0 (FULLY_CONNECTED)           [b:1,c:32]                      448   serving_default_keras_tensor0 
+                                                                                              arith_constant1 
+                                                                                               arith_constant 
+       nl_0_nl (FULLY_CONNECTED)          [b:1,c:32]                       32                          gemm_0 
+------ ---------------------------------- ------------- ------------- ------- ------------------------------- 
+1      tfl_pseudo_qconst ()               [b:32,c:32]   1,024/1,024                                           
+       arith_constant5 ()                 [b:32]        32/128                                                
+       gemm_1 (FULLY_CONNECTED)           [b:1,c:32]                    1,056                         nl_0_nl 
+                                                                                            tfl_pseudo_qconst 
+                                                                                              arith_constant5 
+       nl_1_nl (FULLY_CONNECTED)          [b:1,c:32]                       32                          gemm_1 
+------ ---------------------------------- ------------- ------------- ------- ------------------------------- 
+2      arith_constant2 ()                 [b:16,c:32]   512/2,048                                             
+       arith_constant6 ()                 [b:16]        16/64                                                 
+       gemm_2 (FULLY_CONNECTED)           [b:1,c:16]                      528                         nl_1_nl 
+                                                                                              arith_constant2 
+                                                                                              arith_constant6 
+       nl_2_nl (FULLY_CONNECTED)          [b:1,c:16]                       16                          gemm_2 
+------ ---------------------------------- ------------- ------------- ------- ------------------------------- 
+3      arith_constant3 ()                 [b:3,c:16]    48/192                                                
+       arith_constant4 ()                 [b:3]         3/12                                                  
+       gemm_3 (FULLY_CONNECTED)           [b:1,c:3]                        51                         nl_2_nl 
+                                                                                              arith_constant3 
+                                                                                              arith_constant4 
+------ ---------------------------------- ------------- ------------- ------- ------------------------------- 
+4      nl_4 (SOFTMAX)                     [b:1,c:3]                        45                          gemm_3 
+------ ---------------------------------- ------------- ------------- ------- ------------------------------- 
+model: macc=2,208 weights=5,260 activations=-- io=--
+
+
+
+
+
+Compilation details
+------------------------------------------------------------------------------------
+Compiler version: 1.1.1-14
+Compiler arguments:  -i C:\Users\will\.stm32cubemx\h1_output\meteo_h1_model_OE_3_3_0.onnx --json-quant-file C:\Users\will\.stm32cubemx\h1_output\meteo_h1_model_OE_3_3_0_Q.json -g h1.c --load-mdesc C:\Users\will\STM32Cube\Repository\Packs\STMicroelectronics\X-CUBE-AI\10.2.0\scripts\N6_scripts\my_mdescs\stm32n6.mdesc --load-mpool C:\Users\will\STM32Cube\Repository\Packs\STMicroelectronics\X-CUBE-AI\10.2.0\scripts\N6_scripts\my_mpools\stm32n6.mpool --save-mpool-file C:\Users\will\AppData\Local\Temp\mxAI_workspace24970206350001090628069945392348\neural_art__h1\stm32n6.mpool --out-dir-prefix C:\Users\will\AppData\Local\Temp\mxAI_workspace24970206350001090628069945392348\neural_art__h1/ --optimization 3 --all-buffers-info --mvei --cache-maintenance --Oauto-sched --native-float --enable-virtual-mem-pools --Omax-ca-pipe 4 --Ocache-opt --Os --output-info-file c_info.json --network-name h1
+====================================================================================
+
+Memory usage information  (input/output buffers are included in activations)
+------------------------------------------------------------------------------------
+	flexMEM    [0x34000000 - 0x34000000]:          0  B /          0  B  (  0.00 % used) -- weights:          0  B (  0.00 % used)  activations:          0  B (  0.00 % used)
+	cpuRAM1    [0x34064000 - 0x34064000]:          0  B /          0  B  (  0.00 % used) -- weights:          0  B (  0.00 % used)  activations:          0  B (  0.00 % used)
+	cpuRAM2    [0x34100000 - 0x34200000]:          0  B /      1.000 MB  (  0.00 % used) -- weights:          0  B (  0.00 % used)  activations:          0  B (  0.00 % used)
+	npuRAM3    [0x34200000 - 0x34270000]:          0  B /    448.000 kB  (  0.00 % used) -- weights:          0  B (  0.00 % used)  activations:          0  B (  0.00 % used)
+	npuRAM4    [0x34270000 - 0x342E0000]:          0  B /    448.000 kB  (  0.00 % used) -- weights:          0  B (  0.00 % used)  activations:          0  B (  0.00 % used)
+	npuRAM5    [0x342E0000 - 0x34350000]:      1.043 kB /    448.000 kB  (  0.23 % used) -- weights:          0  B (  0.00 % used)  activations:      1.043 kB (  0.23 % used)
+	npuRAM6    [0x34350000 - 0x343C0000]:          0  B /    448.000 kB  (  0.00 % used) -- weights:          0  B (  0.00 % used)  activations:          0  B (  0.00 % used)
+	octoFlash  [0x71000000 - 0x78000000]:      8.137 kB /    112.000 MB  (  0.01 % used) -- weights:      8.137 kB (  0.01 % used)  activations:          0  B (  0.00 % used)
+	hyperRAM   [0x90000000 - 0x92000000]:          0  B /     32.000 MB  (  0.00 % used) -- weights:          0  B (  0.00 % used)  activations:          0  B (  0.00 % used)
+---
+Total:                                             9.180 kB                                  -- weights:      8.137 kB                  activations:      1.043 kB                   
+====================================================================================
+
+
+Used memory ranges
+------------------------------------------------------------------------------------
+	npuRAM5    [0x342E0000 - 0x34350000]: 0x342E0000-0x342E0430
+	octoFlash  [0x71000000 - 0x78000000]: 0x71000000-0x71002090
+====================================================================================
+
+Epochs details
+------------------------------------------------------------------------------------
+Total number of epochs: 20 of which 12 implemented in software
+---
+epoch ID   HW/SW/EC Operation (SW only)
+epoch 1       HW    
+epoch 2      -SW-   (        Conv        )
+epoch 3       HW    
+epoch 4      -SW-   (        Add         )
+epoch 5      -SW-   (        Relu        )
+epoch 6       HW    
+epoch 7      -SW-   (        Conv        )
+epoch 8       HW    
+epoch 9      -SW-   (        Add         )
+epoch 10     -SW-   (        Relu        )
+epoch 11      HW    
+epoch 12     -SW-   (        Conv        )
+epoch 13      HW    
+epoch 14     -SW-   (        Add         )
+epoch 15     -SW-   (        Relu        )
+epoch 16      HW    
+epoch 17     -SW-   (        Conv        )
+epoch 18      HW    
+epoch 19     -SW-   (        Add         )
+epoch 20     -SW-   (      Softmax       )
+==================================================================================== 
+ Requested memory size by section - "stm32n6npu" target
+ ------------------------------- -------- -------- ------ ------- 
+ module                              text   rodata   data     bss 
+ ------------------------------- -------- -------- ------ ------- 
+ NetworkRuntime1020_CM55_GCC.a     11,712       32      0       0 
+ h1.o                               1,340    7,206      0       0 
+ lib (toolchain)*                  12,296    2,262      0       0 
+ ll atonn runtime                   6,620    3,040      0      13 
+ ------------------------------- -------- -------- ------ ------- 
+ RT total**                        31,968   12,540      0      13 
+ ------------------------------- -------- -------- ------ ------- 
+ weights                                0    8,332      0       0 
+ activations                            0        0      0   1,068 
+ io                                     0        0      0       0 
+ ------------------------------- -------- -------- ------ ------- 
+ TOTAL                             31,968   20,872      0   1,081 
+ ------------------------------- -------- -------- ------ ------- 
+ *  toolchain objects (libm/libgcc*)
+ ** RT AI runtime objects (kernels+infrastructure)
+  
+  Summary - "stm32n6npu" target
+  --------------------------------------------------
+               FLASH (ro)      %*   RAM (rw)      % 
+  --------------------------------------------------
+  RT total         44,508   84.2%         13   1.2% 
+  --------------------------------------------------
+  TOTAL            52,840              1,081        
+  --------------------------------------------------
+  *  rt/total
+

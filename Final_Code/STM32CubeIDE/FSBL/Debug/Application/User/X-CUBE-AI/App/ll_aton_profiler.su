@@ -1,0 +1,4 @@
+../../../Middlewares/ST/AI/Npu/ll_aton/ll_aton_NN_interface.h:494:32:LL_Buffer_addr_base	24	static
+../../../Middlewares/ST/AI/Npu/ll_aton/ll_aton_NN_interface.h:504:32:LL_Buffer_addr_start	16	static
+../../../Middlewares/ST/AI/Npu/ll_aton/ll_aton_NN_interface.h:519:26:LL_Buffer_len	16	static
+../../../Middlewares/ST/AI/Npu/ll_aton/ll_aton_profiler.c:35:5:LL_ATON_LIB_ConvInteger	240	static
