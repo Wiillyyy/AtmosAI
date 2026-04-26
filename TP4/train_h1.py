@@ -29,6 +29,8 @@ if gpus:
 else:
     print("[GPU] CPU only")
 
+#Vérifie si TensorFlow peut utiliser le GPU, si oui GPU, sinon CPU
+
 # ---------------------------------------------------------------------------
 # 1. Récupération données Open-Meteo (3 capteurs seulement)
 # ---------------------------------------------------------------------------
@@ -160,6 +162,8 @@ except ImportError:
     print("     SMOTE non disponible — ignoré")
     X_res, y_res = X_raw, y_raw
 
+#Définir une tendance, idéal pour les microclimats à aix-les-bains
+
 # ---------------------------------------------------------------------------
 # 5. Split + normalisation
 # ---------------------------------------------------------------------------
@@ -174,6 +178,9 @@ X_train = scaler.fit_transform(X_train)
 X_test  = scaler.transform(X_test)
 
 print(f"     Train: {len(X_train):,} | Test: {len(X_test):,}")
+
+#prend des éléments pour l'apprentissage et des éléments pour le training.
+#Normalisation permet de mettre une echelle sur les données, la pression est numériquement énorme mais pas plus importante que les autres paramètres
 
 # ---------------------------------------------------------------------------
 # 6. Modèle MLP léger (embarquable sur STM32)
@@ -190,12 +197,14 @@ model = keras.Sequential([
     keras.layers.Dense(3,  activation="softmax"),
 ], name="meteo_h1_embedded")
 
+#Input : défini la forme des données que la fonction d'activiation va recevoir
 #Fonction d'activation : Relu, Avec 3 couches de neuronnes
 #Relu idéal pour les relations complexes avec plusieures variables
 #Dense = Fully connected, combinne toutes les infos
 #Couche 1 : signaux de base 
 #Couche 2 : interaction entre les signaux (humidité, pression...)
 #Couche 3 : Classification
+#Softmax transforme les résultats en probabilités
 
 model.summary()
 
@@ -211,7 +220,7 @@ model.compile(
 )
 
 #optimizer : Adam , vitesse d'apprentissage : 0.001
-#Adam, optimizer intelligent et adaptatif
+#Adam, optimizer intelligent et adaptatif, idéal pour gérer le bruit
 #Fontion de coût : sparse_categorical_crossentropy
 #sparse_categorical_crossentropy idéal pour classification multi-classes
 
