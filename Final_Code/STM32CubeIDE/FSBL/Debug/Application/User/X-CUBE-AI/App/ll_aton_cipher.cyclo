@@ -1,8 +1,0 @@
-../../../Middlewares/ST/AI/Npu/ll_aton/ll_aton_runtime.h:37:22:__ll_set_aton_owner	1
-../../../Middlewares/ST/AI/Npu/ll_aton/ll_aton_runtime.h:54:22:__ll_clear_aton_owner	1
-../../../Middlewares/ST/AI/Npu/ll_aton/ll_aton_cipher.c:64:5:LL_Streng_EncryptionInit	5
-../../../Middlewares/ST/AI/Npu/ll_aton/ll_aton_cipher.c:106:5:LL_Busif_SetKeys	14
-../../../Middlewares/ST/AI/Npu/ll_aton/ll_aton_cipher.c:151:5:LL_EpochCtrl_EncryptionInit	5
-../../../Middlewares/ST/AI/Npu/ll_aton/ll_aton_cipher.c:181:5:LL_DmaCypherInit	8
-../../../Middlewares/ST/AI/Npu/ll_aton/ll_aton_cipher.c:316:5:LL_ExtDmaCypherInit	15
-../../../Middlewares/ST/AI/Npu/ll_aton/ll_aton_cipher.c:517:6:LL_ATON_DecryptAndCopy	1
